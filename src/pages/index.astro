@@ -1,0 +1,297 @@
+---
+import PostList from '../components/PostList.astro';
+import { getCollection } from 'astro:content';
+import { getCoverSnapshot, homepageCoverConfig } from '../lib/homepageCover';
+import { galleryItems } from '../data/galleryItems';
+
+const currentCover = homepageCoverConfig.manualCover || '';
+const coverSnapshot = getCoverSnapshot();
+
+const posts = await getCollection('posts');
+const sortedPosts = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const formattedPosts = sortedPosts.map((post) => ({
+  slug: post.id.replace('.md', ''),
+  title: post.data.title,
+  date: post.data.date,
+  excerpt: post.data.excerpt,
+  tags: post.data.tags,
+  cover: post.data.cover || currentCover,
+}));
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marinus's Blog</title>
+    <style>
+      :root {
+        --bg-color: #FAFAFB;
+        --text-main: #2C2C2C;
+        --text-muted: #888888;
+        --border-color: #EEEEEE;
+        --radius: 12px;
+        --type-label-size: 0.85rem;
+        --type-label-spacing: 0.1em;
+        --type-nav-size: 0.95rem;
+        --type-nav-spacing: 0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--bg-color);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        color: var(--text-main);
+        line-height: 1.6;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* 博客主轴容器：控制合理的阅读宽度 */
+      .blog-container {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 0 32px;
+      }
+
+      /* 头部导航 */
+      .site-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 40px 0;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .site-brand {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .site-nav {
+        display: flex;
+        gap: 24px;
+        font-size: var(--type-nav-size);
+        letter-spacing: var(--type-nav-spacing);
+        color: var(--text-muted);
+      }
+
+      .site-nav a:hover {
+        color: var(--text-main);
+      }
+
+      /* 主视觉与博客简介 */
+      .hero-section {
+        margin: 56px 0 72px;
+      }
+
+      .hero-intro {
+        font-size: 1.4rem;
+        font-weight: 400;
+        line-height: 1.6;
+        color: var(--text-main);
+        margin-bottom: 40px;
+        max-width: 90%;
+      }
+
+      .hero-cover {
+        position: relative;
+        width: 100%;
+        height: 460px;
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: #f0f0f0;
+      }
+
+      .hero-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* 图片上的时间信息 */
+      .cover-meta {
+        position: absolute;
+        bottom: 20px;
+        left: 24px;
+        display: flex;
+        gap: 16px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+        letter-spacing: 0.02em;
+      }
+
+      /* 博客文章列表区域 */
+      .main-content {
+        margin-bottom: 100px;
+      }
+
+      .section-header {
+        font-size: var(--type-label-size);
+        text-transform: uppercase;
+        letter-spacing: var(--type-label-spacing);
+        color: var(--text-muted);
+        margin-bottom: 30px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      /* Footer */
+      .site-footer {
+        margin-top: 60px;
+        padding-top: 30px;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.8;
+      }
+
+      .footer-links {
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .footer-links a:hover {
+        color: var(--text-main);
+      }
+
+      .footer-desc {
+        font-size: 0.8rem;
+        margin-top: 12px;
+      }
+
+      /* 响应式调整 */
+      @media (max-width: 768px) {
+        .blog-container {
+          padding: 0 18px;
+        }
+
+        .hero-cover {
+          height: 240px;
+        }
+        .hero-intro {
+          font-size: 1.2rem;
+        }
+        .cover-meta {
+          flex-direction: column;
+          gap: 4px;
+          left: 16px;
+          bottom: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="blog-container">
+      <!-- 博客导航栏 -->
+      <header class="site-header">
+        <div class="site-brand">Marinus's Blog</div>
+        <nav class="site-nav">
+          <a href="/">首页</a>
+          <a href="/archive">归档</a>
+          <a href="/about">关于</a>
+        </nav>
+      </header>
+
+      <!-- 简介与横幅图片 -->
+      <section class="hero-section">
+        <h1 class="hero-intro">
+          记录技术、设计与审美的交叉点。<br/>
+          分享前端工程化、排版与生活日常。
+        </h1>
+        
+        <div class="hero-cover">
+          <img src={currentCover} alt="Cover image" />
+          <div class="cover-meta">
+            <span data-cover-date>{coverSnapshot.gregorianDate}</span>
+            <span data-cover-lunar>{coverSnapshot.lunarDate}</span>
+            <span data-cover-time>{coverSnapshot.localTime}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 最新文章列表 -->
+      <main class="main-content">
+        <h2 class="section-header">Latest Posts / 最新文章</h2>
+        <PostList posts={formattedPosts} galleryItems={galleryItems} />
+      </main>
+
+      <!-- Footer -->
+      <footer class="site-footer">
+        <div class="footer-links">
+          <a href="https://github.com/xuanyuanp/my-canvas-blog" target="_blank" rel="noopener noreferrer">
+            GitHub
+          </a>
+          <a href="mailto:contact@example.com">Email</a>
+        </div>
+        <p class="footer-desc">
+          © 2026 Marinus's Blog. Built with Astro & Pretext.<br/>
+          记录技术、设计与生活的美好时刻。
+        </p>
+      </footer>
+    </div>
+
+    <!-- 时间更新脚本 -->
+    <script type="module">
+      const getSnapshot = (date = new Date()) => {
+        const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+        const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+        const lunarFormatter = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        return {
+          localTime: timeFormatter.format(date),
+          gregorianDate: dateFormatter.format(date),
+          lunarDate: lunarFormatter.format(date),
+        };
+      };
+
+      const coverTime = document.querySelector('[data-cover-time]');
+      const coverDate = document.querySelector('[data-cover-date]');
+      const coverLunar = document.querySelector('[data-cover-lunar]');
+
+      const renderSnapshot = () => {
+        const snapshot = getSnapshot(new Date());
+        if (coverTime) coverTime.textContent = snapshot.localTime;
+        if (coverDate) coverDate.textContent = snapshot.gregorianDate;
+        if (coverLunar) coverLunar.textContent = snapshot.lunarDate;
+      };
+
+      renderSnapshot();
+      window.setInterval(renderSnapshot, 1000);
+    </script>
+  </body>
+</html>

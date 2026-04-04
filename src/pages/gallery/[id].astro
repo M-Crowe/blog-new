@@ -1,0 +1,144 @@
+---
+import { galleryItems } from '../../data/galleryItems';
+
+export async function getStaticPaths() {
+  return galleryItems
+    .filter((item) => !!item.readme)
+    .map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+
+interface GalleryItem {
+  id: string;
+  title: string;
+  category: string;
+  dateLabel: string;
+  place: string;
+  overlayTitle?: string;
+  image: string;
+  readme?: string;
+}
+
+interface Props {
+  item: GalleryItem;
+}
+
+const { item } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{item.title} README</title>
+    <style>
+      :root {
+        --text-main: #1f2937;
+        --text-muted: #6b7280;
+        --line: #e5e7eb;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        color: var(--text-main);
+        background: #fbfbfc;
+      }
+
+      .container {
+        width: min(980px, 92vw);
+        margin: 48px auto 72px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        margin-bottom: 28px;
+      }
+
+      .hero {
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .hero-image {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        display: block;
+      }
+
+      .hero-meta {
+        padding: 20px 22px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.78rem;
+      }
+
+      .readme {
+        margin-top: 20px;
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 24px;
+      }
+
+      h1 {
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+        margin-bottom: 14px;
+        letter-spacing: -0.03em;
+      }
+
+      .readme-tag {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+
+      .readme p {
+        line-height: 1.8;
+        color: #374151;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <a class="back-link" href="/">← 返回首页</a>
+
+      <section class="hero">
+        <img class="hero-image" src={item.image} alt={item.title} />
+        <div class="hero-meta">
+          <span>{item.category}</span>
+          <span>{item.dateLabel}</span>
+          <span>{item.place}</span>
+        </div>
+      </section>
+
+      <section class="readme">
+        <span class="readme-tag">README</span>
+        <h1>{item.overlayTitle || item.title}</h1>
+        <p>{item.readme}</p>
+      </section>
+    </main>
+  </body>
+</html>

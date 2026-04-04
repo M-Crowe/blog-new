@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Paper Wave Cover</title>
+  <desc id="desc">Warm paper palette with layered waves and circles.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#faf6ef"/>
+      <stop offset="100%" stop-color="#ead9c5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <path d="M0 620C220 540 420 540 640 620C860 700 1080 700 1300 620C1410 580 1510 560 1600 570V900H0V620Z" fill="#dcbfa0"/>
+  <path d="M0 680C220 600 420 600 640 680C860 760 1080 760 1300 680C1410 640 1510 620 1600 630V900H0V680Z" fill="#cfa984"/>
+  <path d="M0 740C220 660 420 660 640 740C860 820 1080 820 1300 740C1410 700 1510 680 1600 690V900H0V740Z" fill="#ba8f66"/>
+  <circle cx="1320" cy="220" r="120" fill="#fff4dc"/>
+  <circle cx="290" cy="250" r="70" fill="#f1dcc0"/>
+</svg>
