@@ -48,12 +48,16 @@ const formattedPosts = sortedPosts.map((post) => ({
       html {
         background: var(--bg-color);
         -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+        width: 100%;
       }
 
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
         color: var(--text-main);
         line-height: 1.6;
+        overflow-x: hidden;
+        width: 100%;
       }
 
       a {
@@ -191,20 +195,112 @@ const formattedPosts = sortedPosts.map((post) => ({
       /* 响应式调整 */
       @media (max-width: 768px) {
         .blog-container {
-          padding: 0 18px;
+          padding: 0 16px;
+        }
+
+        .site-header {
+          padding: 24px 0;
+          flex-direction: column;
+          gap: 16px;
+          align-items: flex-start;
+        }
+
+        .site-brand {
+          font-size: 1rem;
+        }
+
+        .site-nav {
+          gap: 16px;
+          font-size: 0.9rem;
+          width: 100%;
+        }
+
+        .hero-section {
+          margin: 32px 0 48px;
+        }
+
+        .hero-intro {
+          font-size: 1.1rem;
+          margin-bottom: 32px;
+          max-width: 100%;
+          line-height: 1.5;
         }
 
         .hero-cover {
-          height: 240px;
+          height: 260px;
+          border-radius: 8px;
         }
-        .hero-intro {
-          font-size: 1.2rem;
-        }
+
         .cover-meta {
           flex-direction: column;
           gap: 4px;
           left: 16px;
           bottom: 16px;
+          font-size: 0.8rem;
+        }
+
+        .section-header {
+          font-size: 0.75rem;
+          margin-bottom: 24px;
+        }
+
+        .site-footer {
+          margin-top: 48px;
+          padding-top: 24px;
+          font-size: 0.8rem;
+        }
+
+        .footer-links {
+          gap: 12px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .blog-container {
+          padding: 0 12px;
+        }
+
+        .site-header {
+          padding: 20px 0;
+        }
+
+        .site-brand {
+          font-size: 0.95rem;
+        }
+
+        .site-nav {
+          gap: 12px;
+          font-size: 0.85rem;
+        }
+
+        .hero-intro {
+          font-size: 1rem;
+          margin-bottom: 24px;
+          line-height: 1.4;
+        }
+
+        .hero-cover {
+          height: 200px;
+        }
+
+        .cover-meta {
+          left: 12px;
+          bottom: 12px;
+          font-size: 0.75rem;
+        }
+
+        .main-content {
+          margin-bottom: 60px;
+        }
+
+        .site-footer {
+          margin-top: 40px;
+          padding-top: 20px;
+          font-size: 0.75rem;
+        }
+
+        .footer-links {
+          gap: 8px;
         }
       }
     </style>
@@ -225,7 +321,7 @@ const formattedPosts = sortedPosts.map((post) => ({
       <section class="hero-section">
         <h1 class="hero-intro">
           记录技术、设计与审美的交叉点。<br/>
-          分享前端工程化、排版与生活日常。
+          分享生活日常。
         </h1>
         
         <div class="hero-cover">

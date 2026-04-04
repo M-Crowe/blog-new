@@ -318,6 +318,14 @@ const formatDate = (date: Date) => {
         line-height: 1.86;
         color: #2f3640;
         max-width: 68ch;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+      }
+
+      :global(article p), :global(article h2), :global(article h3) {
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
 
       .ai-notice {
@@ -500,20 +508,31 @@ const formatDate = (date: Date) => {
       }
 
       @media (max-width: 600px) {
+        html {
+          font-size: 14.5px;
+        }
+
         .container {
-          padding: 40px 16px;
+          padding: 24px 14px;
+          width: 100vw;
+          max-width: 100%;
+          overflow-x: hidden;
         }
 
         .post-banner {
           margin-bottom: 22px;
+          height: clamp(120px, 16vw, 200px);
         }
 
         h1 {
-          font-size: 24px;
+          font-size: 22px;
+          word-break: break-word;
         }
 
         .content-grid {
-          grid-template-columns: 1fr;
+          display: grid;
+          grid-template-columns: minmax(0, 100%);
+          width: 100%;
           gap: 18px;
         }
 
@@ -526,6 +545,12 @@ const formatDate = (date: Date) => {
         .tags {
           flex-direction: row;
           gap: 8px 14px;
+        }
+
+        :global(article) {
+          max-width: 100%;
+          width: 100%;
+          overflow-x: hidden;
         }
 
         :global(article h2) {
@@ -633,22 +658,43 @@ const formatDate = (date: Date) => {
           return;
         }
 
-        if (element.closest('pre, code')) {
+        if (element.closest('pre, code, .ai-notice')) {
           return;
         }
-
-        const text = element.textContent?.trim();
+        
+        // Guard against double rendering or losing original text
+        if (!element.dataset.originalText) {
+          element.dataset.originalText = element.textContent?.trim() || '';
+        }
+        
+        const text = element.dataset.originalText;
         if (!text) {
           return;
         }
+
+        // Get absolute max width constrained by article
+        const article = element.closest('article');
+        let containerWidth;
+        if (article) {
+           const articleWidth = article.clientWidth;
+           const articleStyle = window.getComputedStyle(article);
+           containerWidth = articleWidth - parseFloat(articleStyle.paddingLeft || '0') - parseFloat(articleStyle.paddingRight || '0');
+        } else {
+           containerWidth = element.clientWidth;
+        }
+
+        // Safety margin of 2 pixels to forbid exact-equal math overflow in CSS layout
+        const drawWidth = Math.max(1, containerWidth - 2);
 
         const styles = window.getComputedStyle(element);
         const fontSize = Number.parseFloat(styles.fontSize);
         const lineHeightValue = Number.parseFloat(styles.lineHeight);
         const lineHeight = Number.isNaN(lineHeightValue) ? fontSize * 1.86 : lineHeightValue;
-        const font = `${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
-        const width = Math.max(1, element.clientWidth);
-        const drawWidth = Math.max(1, width - 16);
+        
+        // Safely declare font to Canvas explicitly bypassing "BlinkMacSystemFont" unquoted crash
+        const fontWeight = styles.fontWeight || '400';
+        const fontStyle = styles.fontStyle || 'normal';
+        const font = `${fontStyle} ${fontWeight} ${fontSize}px system-ui, -apple-system, sans-serif`;
 
         const prepared = prepareWithSegments(text, font);
         const { lines } = layoutWithLines(prepared, drawWidth, lineHeight);
@@ -660,8 +706,10 @@ const formatDate = (date: Date) => {
         lines.forEach((line) => {
           const span = document.createElement('span');
           span.textContent = line.text;
-          span.style.display = 'block';
+          span.style.display = 'inline-block'; // Changed to inline-block to restrict bounding box to text width, enabling correct mouse gravity center calculation
+          span.style.width = '100%';
           span.style.lineHeight = `${lineHeight}px`;
+          span.style.whiteSpace = 'nowrap'; // Enforce the engine layout logic, forbid real DOM to wrap
           span.style.transform = 'translate3d(0, 0, 0)';
           span.style.willChange = 'transform';
           element.appendChild(span);
@@ -673,12 +721,13 @@ const formatDate = (date: Date) => {
 
       const renderArticleWithPretext = () => {
         const article = document.querySelector('article');
-        if (!article) return;
+        if (!article) return [];
 
         const result = [];
-        // 处理段落和标题，不处理列表项和AI提示
         article.querySelectorAll(':is(p, h2, h3)').forEach((el) => {
-          if (el.closest('pre, code, .ai-notice')) return;
+          // ensure TOC links stay valid by keeping the id!
+          // We don't overwrite id, only innerHTML. Wait, generateTOC adds IDs to headings!
+          // If generateTOC was called before this, the tag already has an ID.
           const rendered = renderTextBlockWithPretext(el);
           if (rendered) {
             result.push({
@@ -690,36 +739,24 @@ const formatDate = (date: Date) => {
           }
         });
 
-        // 对列表项直接应用吸附（不重排版）
         article.querySelectorAll('li').forEach((el) => {
-          result.push({
-            element: el,
-            lines: [],
-            spans: [el],
-            lineHeight: 0,
-          });
+          result.push({ element: el, lines: [], spans: [el], lineHeight: 0 });
         });
 
         return result;
       };
 
-      const setupMouseAttraction = () => {
-        if (!enableMouseAttraction) {
-          return;
-        }
+      let currentRafId = 0;
+      let isSelecting = false;
 
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          return;
-        }
+      const setupMouseAttraction = (blocks) => {
+        if (!enableMouseAttraction) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (!blocks || !blocks.length) return;
 
-        const article = document.querySelector('article');
-        if (!article) {
-          return;
-        }
-
-        const blocks = renderArticleWithPretext();
-        if (!blocks.length) {
-          return;
+        // Clean up previous instance and orb if resizing or re-rendering
+        if (window.cleanupMouseAttraction) {
+          window.cleanupMouseAttraction();
         }
 
         const orbEl = document.createElement('div');
@@ -736,27 +773,12 @@ const formatDate = (date: Date) => {
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
         const models = blocks.flatMap((block) => {
-          // 如果是列表项，直接返回一个模型（元素本身）
           if (block.lines.length === 0 && block.spans.length === 1) {
-            return [{
-              span: block.spans[0],
-              line: null,
-              isListItem: true,
-              offsetX: 0,
-              offsetY: 0,
-            }];
+            return [{ span: block.spans[0], line: null, isListItem: true, offsetX: 0, offsetY: 0 }];
           }
-          // 否则返回每一行的 span 模型
-          return block.spans.map((span, idx) => ({
-            span,
-            line: block.lines[idx],
-            isListItem: false,
-            offsetX: 0,
-            offsetY: 0,
-          }));
+          return block.spans.map((span, idx) => ({ span, line: block.lines[idx], isListItem: false, offsetX: 0, offsetY: 0 }));
         });
 
-        let rafId = 0;
         const tick = () => {
           orb.x += (orb.tx - orb.x) * 0.2;
           orb.y += (orb.ty - orb.y) * 0.2;
@@ -764,10 +786,11 @@ const formatDate = (date: Date) => {
           orbEl.style.top = `${orb.y}px`;
 
           models.forEach((model) => {
+            if (!model.span.isConnected) return; // Safegaurd against detached DOM nodes
+            
             const spanRect = model.span.getBoundingClientRect();
             const cx = spanRect.left + spanRect.width / 2;
             const cy = spanRect.top + spanRect.height / 2;
-
             const dx = orb.x - cx;
             const dy = orb.y - cy;
             const distance = Math.hypot(dx, dy);
@@ -778,81 +801,100 @@ const formatDate = (date: Date) => {
 
             model.offsetX += (targetX - model.offsetX) * 0.2;
             model.offsetY += (targetY - model.offsetY) * 0.2;
-
-            // 应用 transform
-            if (model.isListItem) {
-              // 列表项作为整体移动
-              model.span.style.transform = `translate(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px)`;
-            } else {
-              // span 应用 transform
-              model.span.style.transform = `translate(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px)`;
-            }
+            model.span.style.transform = `translate3d(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px, 0)`;
           });
 
-          rafId = requestAnimationFrame(tick);
+          currentRafId = requestAnimationFrame(tick);
         };
 
-        const onMove = (e) => {
-          orb.tx = e.clientX;
-          orb.ty = e.clientY;
-        };
-
-        const onLeave = () => {
-          orb.tx = window.innerWidth * 0.5;
-          orb.ty = window.innerHeight * 0.45;
-        };
-
-        let isSelecting = false;
+        const onMove = (e) => { orb.tx = e.clientX; orb.ty = e.clientY; };
+        const onLeave = () => { orb.tx = window.innerWidth * 0.5; orb.ty = window.innerHeight * 0.45; };
+        
         const onMouseDown = () => {
           isSelecting = true;
-          models.forEach((m) => {
-            m.offsetX *= 0.8;
-            m.offsetY *= 0.8;
-          });
+          models.forEach(m => { m.offsetX *= 0.8; m.offsetY *= 0.8; });
         };
-        const onMouseUp = () => {
-          isSelecting = false;
-        };
+        const onMouseUp = () => { isSelecting = false; };
 
-        rafId = requestAnimationFrame(tick);
+        currentRafId = requestAnimationFrame(tick);
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseleave', onLeave);
         window.addEventListener('blur', onLeave);
         document.addEventListener('mousedown', onMouseDown);
         document.addEventListener('mouseup', onMouseUp);
 
-        window.addEventListener('beforeunload', () => {
-          cancelAnimationFrame(rafId);
-        });
+        // Store cleanup function globally to properly destroy and recreate when layout resizes
+        window.cleanupMouseAttraction = () => {
+          cancelAnimationFrame(currentRafId);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseleave', onLeave);
+          window.removeEventListener('blur', onLeave);
+          document.removeEventListener('mousedown', onMouseDown);
+          document.removeEventListener('mouseup', onMouseUp);
+          if (orbEl.isConnected) orbEl.remove();
+        };
+
+        window.addEventListener('beforeunload', window.cleanupMouseAttraction);
       };
 
-      // Generate Table of Contents
       const generateTOC = () => {
         const article = document.querySelector('article');
         if (!article) return;
-
         const headings = article.querySelectorAll('h2, h3');
         const tocList = document.getElementById('toc-list');
         if (!tocList) return;
-
+        
+        // Make sure it doesn't duplicate if called multiple times implicitly
+        tocList.innerHTML = '';
+        
         headings.forEach((heading, index) => {
-          if (!heading.id) {
-            heading.id = `heading-${index}`;
-          }
-
+          if (!heading.id) heading.id = `heading-${index}`;
           const li = document.createElement('li');
           li.className = heading.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
-
           const a = document.createElement('a');
           a.href = `#${heading.id}`;
-          a.textContent = heading.textContent;
-
+          
+          // Use originalText if pretext was already rendered and replaced textContent
+          a.textContent = heading.dataset.originalText || heading.textContent;
           li.appendChild(a);
           tocList.appendChild(li);
         });
       };
 
-      // Back to Top functionality
+      const initSystem = () => {
+        // FIRST: Generate TOC before inner content is sliced into spans by pretext, but fallback is supported just in case! Moreso we generate TOC first.
+        generateTOC();
+        
+        const blocks = renderArticleWithPretext();
+        setupMouseAttraction(blocks);
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSystem);
+      } else {
+        initSystem();
+      }
+
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          // Reset text nodes and flush flags to allow correct native reflow width measurements
+          document.querySelectorAll('article p, article h2, article h3').forEach((el) => {
+            if (el.dataset.originalText) {
+              el.dataset.pretextRendered = 'false';
+              el.textContent = el.dataset.originalText;
+            }
+          });
+          
+          // Wait 1 frame so DOM can actually paint the restored widths and wrap naturally before we lock it into strict drawing shapes via Pretext
+          requestAnimationFrame(() => {
+            const blocks = renderArticleWithPretext();
+            // Don't setupMouseAttraction again since it skips if orb exists
+          });
+        }, 300);
+      });
+
       const backToTopBtn = document.getElementById('back-to-top');
       if (backToTopBtn) {
         window.addEventListener('scroll', () => {
@@ -869,15 +911,6 @@ const formatDate = (date: Date) => {
             behavior: 'smooth',
           });
         });
-      }
-
-      // Initialize TOC
-      generateTOC();
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupMouseAttraction);
-      } else {
-        setupMouseAttraction();
       }
     </script>
   </body>
