@@ -59,6 +59,7 @@ const formatDate = (date: Date) => {
         background-color: var(--bg-color);
         color: var(--text-main);
         line-height: 1.8;
+        overflow-x: hidden;
       }
 
       .container {
@@ -212,6 +213,23 @@ const formatDate = (date: Date) => {
       }
 
       /* Table of Contents */
+      .toc-aside {
+        position: sticky;
+        top: 24px;
+      }
+      
+      .toc-overlay {
+        display: none;
+      }
+      
+      .toc-header {
+        display: none; /* Only show on mobile */
+      }
+      
+      .mobile-toc-toggle {
+        display: none;
+      }
+
       .toc-section {
         margin-top: 32px;
         padding-top: 24px;
@@ -502,8 +520,100 @@ const formatDate = (date: Date) => {
         .content-grid {
           grid-template-columns: 220px minmax(0, 1fr);
         }
+        
         .toc-aside {
-          display: none;
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 100%;
+          height: 100vh;
+          z-index: 2000;
+          pointer-events: none; /* Let clicks pass through when hidden */
+        }
+        
+        .toc-overlay {
+          display: block;
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .toc-drawer {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 280px;
+          height: 100%;
+          background: var(--bg-color);
+          box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+          transform: translateX(100%);
+          transition: transform 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          pointer-events: auto; /* Catch clicks on the drawer */
+        }
+        
+        .toc-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 24px 20px 16px;
+          border-bottom: 1px solid var(--line);
+        }
+        
+        .toc-header .toc-label {
+          margin-bottom: 0;
+        }
+
+        .toc-close {
+          background: none;
+          border: none;
+          font-size: 20px;
+          color: var(--text-muted);
+          cursor: pointer;
+        }
+        
+        .toc-section {
+          margin-top: 0;
+          padding: 20px;
+          overflow-y: auto;
+          flex: 1;
+        }
+        
+        .mobile-toc-toggle {
+          display: flex;
+          position: fixed;
+          bottom: 40px;
+          right: 100px; /* To the left of back-to-top */
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: var(--bg-color);
+          border: 1px solid var(--line);
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 18px;
+          z-index: 999;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          transition: background 0.2s ease;
+        }
+        
+        .mobile-toc-toggle:hover {
+          background: rgba(0, 0, 0, 0.04);
+        }
+
+        /* Active states for JS */
+        .toc-aside.is-open {
+          pointer-events: auto;
+        }
+        .toc-aside.is-open .toc-overlay {
+          opacity: 1;
+        }
+        .toc-aside.is-open .toc-drawer {
+          transform: translateX(0);
         }
       }
 
@@ -514,7 +624,7 @@ const formatDate = (date: Date) => {
 
         .container {
           padding: 24px 14px;
-          width: 100vw;
+          width: 100%;
           max-width: 100%;
           overflow-x: hidden;
         }
@@ -565,8 +675,12 @@ const formatDate = (date: Date) => {
           font-size: 16px;
         }
 
-        .toc-section {
-          display: none;
+        .mobile-toc-toggle {
+          bottom: 20px;
+          right: 68px; /* Move next to back-to-top on small screens */
+          width: 36px;
+          height: 36px;
+          font-size: 16px;
         }
       }
     </style>
@@ -636,15 +750,22 @@ const formatDate = (date: Date) => {
           </footer>
         </article>
 
-        <aside class="toc-aside">
-          <div class="toc-section" id="toc-container">
-            <span class="toc-label">目录</span>
-            <ul class="toc-list" id="toc-list"></ul>
+        <aside class="toc-aside" id="toc-aside">
+          <div class="toc-overlay" id="toc-overlay"></div>
+          <div class="toc-drawer" id="toc-drawer">
+            <div class="toc-header">
+              <span class="toc-label">目录</span>
+              <button class="toc-close" id="toc-close" title="关闭目录">✕</button>
+            </div>
+            <div class="toc-section" id="toc-container">
+              <ul class="toc-list" id="toc-list"></ul>
+            </div>
           </div>
         </aside>
       </div>
     </div>
 
+    <button class="mobile-toc-toggle" id="mobile-toc-toggle" title="展开目录">☰</button>
     <button class="back-to-top" id="back-to-top" title="回到顶部">↑</button>
 
     <script>
@@ -911,6 +1032,47 @@ const formatDate = (date: Date) => {
             behavior: 'smooth',
           });
         });
+      }
+
+      // Mobile TOC Drawer JS
+      const setupMobileTOC = () => {
+        const toggleBtn = document.getElementById('mobile-toc-toggle');
+        const closeBtn = document.getElementById('toc-close');
+        const overlay = document.getElementById('toc-overlay');
+        const aside = document.getElementById('toc-aside');
+        const tocList = document.getElementById('toc-list');
+        
+        if (!toggleBtn || !aside) return;
+
+        const openTOC = () => {
+          aside.classList.add('is-open');
+          document.body.style.overflow = 'hidden';
+        };
+
+        const closeTOC = () => {
+          aside.classList.remove('is-open');
+          document.body.style.overflow = '';
+        };
+
+        toggleBtn.addEventListener('click', openTOC);
+        if(closeBtn) closeBtn.addEventListener('click', closeTOC);
+        if(overlay) overlay.addEventListener('click', closeTOC);
+
+        // delegate event since TOC links are generated dynamically
+        if(tocList) {
+          tocList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A') {
+              closeTOC();
+            }
+          });
+        }
+      };
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupMobileTOC);
+      } else {
+        // give it a tiny delay to ensure TOC links generation finishes first
+        setTimeout(setupMobileTOC, 50);
       }
     </script>
   </body>
