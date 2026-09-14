@@ -1,21 +1,11 @@
 ---
-import { galleryItems } from '../../data/galleryItems';
+import { galleryItems, type GalleryItem } from '../../data/galleryItems';
 
 export async function getStaticPaths() {
-  return galleryItems
-    .filter((item) => !!item.readme)
-    .map((item) => ({ params: { id: item.id }, props: { item } }));
-}
-
-interface GalleryItem {
-  id: string;
-  title: string;
-  category: string;
-  dateLabel: string;
-  place: string;
-  overlayTitle?: string;
-  image: string;
-  readme?: string;
+  return galleryItems.map((item) => ({
+    params: { id: item.id },
+    props: { item },
+  }));
 }
 
 interface Props {
@@ -23,6 +13,10 @@ interface Props {
 }
 
 const { item } = Astro.props;
+
+const currentIndex = galleryItems.findIndex((it) => it.id === item.id);
+const prevItem = currentIndex > 0 ? galleryItems[currentIndex - 1] : null;
+const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIndex + 1] : null;
 ---
 
 <!DOCTYPE html>
@@ -30,12 +24,15 @@ const { item } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{item.title} README</title>
+    <title>{item.title} · 单幅特写 | Marinus's ArtBook</title>
     <style>
       :root {
-        --text-main: #1f2937;
-        --text-muted: #6b7280;
-        --line: #e5e7eb;
+        --bg-color: #FAFAFB;
+        --text-main: #2C2C2C;
+        --text-muted: #888888;
+        --border-color: #EEEEEE;
+        --radius: 14px;
+        --type-nav-size: 0.95rem;
       }
 
       * {
@@ -44,101 +41,359 @@ const { item } = Astro.props;
         box-sizing: border-box;
       }
 
+      html {
+        background: var(--bg-color);
+        -webkit-font-smoothing: antialiased;
+      }
+
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
         color: var(--text-main);
-        background: #fbfbfc;
+        line-height: 1.7;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
       }
 
       .container {
-        width: min(980px, 92vw);
-        margin: 48px auto 72px;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 28px 80px;
       }
 
-      .back-link {
-        display: inline-flex;
-        align-items: center;
-        color: var(--text-muted);
-        text-decoration: none;
-        margin-bottom: 28px;
-      }
-
-      .hero {
-        border-radius: 20px;
-        overflow: hidden;
-        border: 1px solid var(--line);
-        background: #fff;
-      }
-
-      .hero-image {
-        width: 100%;
-        aspect-ratio: 16 / 9;
-        object-fit: cover;
-        display: block;
-      }
-
-      .hero-meta {
-        padding: 20px 22px;
-        border-top: 1px solid var(--line);
+      /* Navigation Bar */
+      .top-nav {
         display: flex;
         justify-content: space-between;
-        gap: 12px;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: 0.78rem;
+        align-items: center;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 40px;
+        font-size: 0.88rem;
       }
 
-      .readme {
-        margin-top: 20px;
-        border-radius: 20px;
-        border: 1px solid var(--line);
-        background: #fff;
+      .back-group {
+        display: flex;
+        gap: 16px;
+        color: var(--text-muted);
+      }
+
+      .back-group a:hover {
+        color: var(--text-main);
+      }
+
+      .plate-badge {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #ff5e3a;
+        background: rgba(255, 94, 58, 0.08);
+        padding: 4px 10px;
+        border-radius: 6px;
+      }
+
+      /* Hero Stage */
+      .monograph-stage {
+        background: #ffffff;
+        border: 1px solid #eaeaea;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+      }
+
+      .media-box {
+        position: relative;
+        width: 100%;
+        background: #0f1115;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 24px;
       }
 
-      h1 {
-        font-size: clamp(1.6rem, 4vw, 2.4rem);
-        margin-bottom: 14px;
-        letter-spacing: -0.03em;
+      .media-image {
+        max-width: 100%;
+        max-height: 75vh;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
       }
 
-      .readme-tag {
+      /* Monograph Details */
+      .monograph-body {
+        padding: 40px 48px;
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 48px;
+      }
+
+      .detail-main {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .category-pill {
         display: inline-block;
-        padding: 5px 10px;
-        border-radius: 999px;
-        background: #f3f4f6;
-        color: var(--text-muted);
-        font-size: 0.72rem;
-        letter-spacing: 0.12em;
+        font-size: 0.76rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        margin-bottom: 14px;
+        color: #ff5e3a;
       }
 
-      .readme p {
-        line-height: 1.8;
-        color: #374151;
+      .title {
+        font-size: 2.2rem;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        color: #111;
+        margin: 0;
+      }
+
+      .subtitle {
+        font-size: 1.05rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin: -4px 0 0;
+      }
+
+      .story-quote {
+        margin-top: 12px;
+        font-size: 0.98rem;
+        line-height: 1.85;
+        color: #333;
+        background: #fafafc;
+        border-left: 3px solid #ff5e3a;
+        padding: 16px 20px;
+        border-radius: 0 8px 8px 0;
+      }
+
+      /* Aside EXIF & Meta */
+      .detail-aside {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .meta-box-card {
+        background: #fafafc;
+        border: 1px solid #eaeaea;
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .meta-box-card h3 {
+        font-size: 0.76rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+      }
+
+      .info-row .k {
+        color: var(--text-muted);
+      }
+
+      .info-row .v {
+        color: var(--text-main);
+        font-weight: 500;
+      }
+
+      /* EXIF Grid */
+      .exif-box-card {
+        background: #ffffff;
+        border: 1px solid #eaeaea;
+        border-radius: 12px;
+        padding: 24px;
+      }
+
+      .exif-box-card h3 {
+        font-size: 0.76rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin: 0 0 16px;
+      }
+
+      .exif-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .exif-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .exif-item .lbl {
+        font-size: 0.68rem;
+        letter-spacing: 0.08em;
+        color: #999;
+      }
+
+      .exif-item .val {
+        font-size: 0.82rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        color: #222;
+      }
+
+      /* Footer Pagination */
+      .monograph-pagination {
+        margin-top: 36px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .page-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: #ffffff;
+        border: 1px solid #eaeaea;
+        border-radius: 10px;
+        font-size: 0.86rem;
+        color: var(--text-main);
+        transition: all 0.2s ease;
+      }
+
+      .page-btn:hover {
+        border-color: #111;
+        transform: translateY(-2px);
+      }
+
+      .page-btn.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      @media (max-width: 860px) {
+        .monograph-body {
+          grid-template-columns: 1fr;
+          padding: 24px 20px;
+          gap: 32px;
+        }
+        .container {
+          padding: 24px 16px 60px;
+        }
+        .title {
+          font-size: 1.7rem;
+        }
       }
     </style>
   </head>
   <body>
     <main class="container">
-      <a class="back-link" href="/">← 返回首页</a>
-
-      <section class="hero">
-        <img class="hero-image" src={item.image} alt={item.title} />
-        <div class="hero-meta">
-          <span>{item.category}</span>
-          <span>{item.dateLabel}</span>
-          <span>{item.place}</span>
+      <nav class="top-nav">
+        <div class="back-group">
+          <a href="/gallery">← 返回画集</a>
+          <span>·</span>
+          <a href="/">博客首页</a>
         </div>
-      </section>
+        <span class="plate-badge">{item.plateNumber}</span>
+      </nav>
 
-      <section class="readme">
-        <span class="readme-tag">README</span>
-        <h1>{item.overlayTitle || item.title}</h1>
-        <p>{item.readme}</p>
-      </section>
+      <article class="monograph-stage">
+        <div class="media-box">
+          <img src={item.image} alt={item.title} class="media-image" />
+        </div>
+
+        <div class="monograph-body">
+          <div class="detail-main">
+            <span class="category-pill">{item.category}</span>
+            <h1 class="title">{item.title}</h1>
+            {item.subtitle && <p class="subtitle">{item.subtitle}</p>}
+
+            <div class="story-quote">
+              <p>{item.story || item.readme || '暂无作品随笔。'}</p>
+            </div>
+          </div>
+
+          <aside class="detail-aside">
+            <div class="meta-box-card">
+              <h3>拍摄档案 / Archival Info</h3>
+              <div class="info-row">
+                <span class="k">地点</span>
+                <span class="v">{item.place}</span>
+              </div>
+              <div class="info-row">
+                <span class="k">时间</span>
+                <span class="v">{item.dateLabel}</span>
+              </div>
+              <div class="info-row">
+                <span class="k">分类</span>
+                <span class="v">{item.category}</span>
+              </div>
+            </div>
+
+            {item.exif && (
+              <div class="exif-box-card">
+                <h3>技术参数 / Technical EXIF</h3>
+                <div class="exif-grid">
+                  <div class="exif-item">
+                    <span class="lbl">CAMERA</span>
+                    <span class="val">{item.exif.camera || '-'}</span>
+                  </div>
+                  <div class="exif-item">
+                    <span class="lbl">LENS</span>
+                    <span class="val">{item.exif.lens || '-'}</span>
+                  </div>
+                  <div class="exif-item">
+                    <span class="lbl">FOCAL</span>
+                    <span class="val">{item.exif.focalLength || '-'}</span>
+                  </div>
+                  <div class="exif-item">
+                    <span class="lbl">APERTURE</span>
+                    <span class="val">{item.exif.aperture || '-'}</span>
+                  </div>
+                  <div class="exif-item">
+                    <span class="lbl">SHUTTER</span>
+                    <span class="val">{item.exif.shutter || '-'}</span>
+                  </div>
+                  <div class="exif-item">
+                    <span class="lbl">ISO</span>
+                    <span class="val">{item.exif.iso || '-'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+      </article>
+
+      <nav class="monograph-pagination">
+        {prevItem ? (
+          <a href={`/gallery/${prevItem.id}`} class="page-btn">
+            ← 上一幅：《{prevItem.title}》
+          </a>
+        ) : (
+          <span class="page-btn disabled">已是第一幅</span>
+        )}
+
+        {nextItem ? (
+          <a href={`/gallery/${nextItem.id}`} class="page-btn">
+            下一幅：《{nextItem.title}》 →
+          </a>
+        ) : (
+          <span class="page-btn disabled">已是最后一幅</span>
+        )}
+      </nav>
     </main>
   </body>
 </html>
+

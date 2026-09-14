@@ -1,4 +1,7 @@
 ---
+import ArtBookSpread from './ArtBookSpread.astro';
+import { artVolumes, type GalleryItem } from '../data/galleryItems';
+
 interface Post {
   slug: string;
   title: string;
@@ -6,17 +9,6 @@ interface Post {
   excerpt: string;
   tags: string[];
   cover: string;
-}
-
-interface GalleryItem {
-  id: string;
-  title: string;
-  category: string;
-  dateLabel: string;
-  place: string;
-  overlayTitle?: string;
-  image: string;
-  readme?: string;
 }
 
 interface Props {
@@ -36,39 +28,16 @@ const formatDate = (date: Date) => {
 ---
 
 <div class="post-list">
-  <div class="view-switcher" role="tablist" aria-label="文章视图切换">
-    <button class="view-tab is-active" type="button" data-view-toggle="list" role="tab" aria-selected="true">技术文章</button>
-    <button class="view-tab" type="button" data-view-toggle="gallery" role="tab" aria-selected="false">画廊视图</button>
+  <div class="view-switcher-row">
+    <div class="view-switcher" role="tablist" aria-label="文章视图切换">
+      <button class="view-tab is-active" type="button" data-view-toggle="list" role="tab" aria-selected="true">技术文章</button>
+      <button class="view-tab" type="button" data-view-toggle="gallery" role="tab" aria-selected="false">画集精选</button>
+    </div>
+    <a href="/gallery" class="view-full-gallery-link">进入完整画集展厅 →</a>
   </div>
 
-  <section class="view-panel" data-view-panel="gallery" aria-label="画廊视图" hidden>
-    <div class="gallery-grid">
-      {galleryItems.map((item, index) => (
-        <article class={`gallery-card ${index === 0 ? 'gallery-card-featured' : ''}`} data-gallery-id={item.id}>
-          <div class="gallery-cover-link" aria-label={`作品《${item.title}》`}>
-            <img src={item.image} alt={item.title} class="gallery-cover" loading={index === 0 ? 'eager' : 'lazy'} />
-            {index === 0 && (
-              <div class="gallery-overlay">
-                <p class="gallery-place-inline">⌖ {item.place}</p>
-                <h2 class="gallery-overlay-title">{item.overlayTitle || item.title}</h2>
-              </div>
-            )}
-          </div>
-          <div class="gallery-content">
-            {item.readme && (
-              <a class="gallery-readme-link" href={`/gallery/${item.id}`}>README</a>
-            )}
-            <div class="gallery-footer">
-              <span class="gallery-category">{item.category}</span>
-              <span class="gallery-date">{item.dateLabel}</span>
-            </div>
-          </div>
-        </article>
-      ))}
-    </div>
-    {galleryItems.length === 0 && (
-      <div class="empty-state">画廊内容准备中，稍后更新。</div>
-    )}
+  <section class="view-panel" data-view-panel="gallery" aria-label="画集精选视图" hidden>
+    <ArtBookSpread volume={artVolumes[0]} items={galleryItems} showVolumeHeader={false} />
   </section>
 
   <section class="view-panel is-active" data-view-panel="list" aria-label="技术文章列表">
@@ -154,20 +123,40 @@ const formatDate = (date: Date) => {
     gap: 22px;
   }
 
+  .view-switcher-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(17, 17, 17, 0.14);
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
   .view-switcher {
     display: inline-flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
     width: fit-content;
-    border-bottom: 1px solid rgba(17, 17, 17, 0.14);
-    padding-bottom: 8px;
+  }
+
+  .view-full-gallery-link {
+    font-size: 0.82rem;
+    color: #ff5e3a;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+  }
+
+  .view-full-gallery-link:hover {
+    opacity: 0.8;
   }
 
   .view-tab {
     border: 0;
     background: transparent;
     color: rgba(17, 17, 17, 0.62);
-    font-size: 0.86rem;
+    font-size: 0.88rem;
     letter-spacing: 0.08em;
     padding: 0 0 8px;
     cursor: pointer;
@@ -178,123 +167,11 @@ const formatDate = (date: Date) => {
   .view-tab.is-active {
     color: #111;
     border-bottom-color: #111;
+    font-weight: 600;
   }
 
   .view-panel {
     animation: panelIn 0.35s ease;
-  }
-
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-  }
-
-  .gallery-card {
-    border-bottom: 1px solid rgba(17, 17, 17, 0.12);
-    padding-bottom: 12px;
-  }
-
-  .gallery-card:hover {
-    opacity: 0.9;
-  }
-
-  .gallery-card-featured {
-    grid-column: auto;
-  }
-
-  .gallery-cover-link {
-    display: block;
-    aspect-ratio: 4 / 5;
-    position: relative;
-    overflow: hidden;
-    border-radius: 10px;
-  }
-
-  .gallery-cover-link::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 20%, rgba(0, 0, 0, 0.42) 100%);
-  }
-
-  .gallery-cover {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .gallery-content {
-    padding: 12px 0 0;
-    display: grid;
-    gap: 12px;
-  }
-
-  .gallery-readme-link {
-    display: inline-flex;
-    width: fit-content;
-    align-items: center;
-    padding: 0;
-    border-bottom: 1px solid rgba(17, 17, 17, 0.22);
-    color: rgba(17, 17, 17, 0.72);
-    font-size: 0.74rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    text-decoration: none;
-    transition: border-color 0.2s ease, color 0.2s ease;
-  }
-
-  .gallery-readme-link:hover {
-    border-color: rgba(17, 17, 17, 0.5);
-    color: #111;
-  }
-
-  .gallery-overlay {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-    padding: 20px;
-    color: #fff;
-    display: grid;
-    gap: 8px;
-  }
-
-  .gallery-place-inline {
-    font-size: 0.95rem;
-    opacity: 0.92;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  }
-
-  .gallery-overlay-title {
-    font-size: clamp(1.4rem, 2vw, 2.2rem);
-    line-height: 1.08;
-    letter-spacing: -0.03em;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.36);
-    max-width: 12ch;
-  }
-
-  .gallery-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 0;
-    color: #8d95a1;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    font-size: 0.88rem;
-  }
-
-  .gallery-category {
-    font-weight: 600;
-  }
-
-  .gallery-date {
-    font-size: 0.92rem;
-    letter-spacing: 0.02em;
   }
 
   .article-list {

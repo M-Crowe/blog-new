@@ -1,0 +1,691 @@
+---
+import type { ArtVolume, GalleryItem } from '../data/galleryItems';
+import BookLightbox from './BookLightbox.astro';
+
+interface Props {
+  volume?: ArtVolume;
+  items: GalleryItem[];
+  showVolumeHeader?: boolean;
+}
+
+const { volume, items, showVolumeHeader = true } = Astro.props;
+
+const leadItem = items[0];
+const pairItems = items.slice(1, 3);
+const featureItem = items[3] || items[items.length - 1];
+const remainingItems = items.slice(4);
+---
+
+<div class="artbook-spread-wrapper">
+  {showVolumeHeader && volume && (
+    <header class="artbook-prologue">
+      <div class="prologue-spine">
+        <span class="spine-badge">{volume.volNumber}</span>
+        <span class="spine-edition">COLLECTION EDITION · {volume.year}</span>
+      </div>
+      <div class="prologue-main">
+        <h1 class="prologue-title">{volume.title}</h1>
+        <p class="prologue-subtitle">{volume.subtitle}</p>
+        <div class="prologue-note">
+          <p>{volume.curatorNote}</p>
+        </div>
+      </div>
+      <div class="prologue-meta">
+        <div class="meta-item">
+          <span class="meta-label">收录作品</span>
+          <span class="meta-value">{items.length} 帧切片</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">装帧格式</span>
+          <span class="meta-value">Lookbook Monograph</span>
+        </div>
+      </div>
+    </header>
+  )}
+
+  <div class="artbook-gallery">
+    <!-- Section 1: Lead Masterpiece (卷首主幅) -->
+    {leadItem && (
+      <section class="spread-section spread-lead">
+        <div class="lead-card" data-open-artbook={leadItem.id}>
+          <div class="lead-media">
+            <img src={leadItem.image} alt={leadItem.title} class="lead-image" loading="eager" />
+            <div class="lead-overlay">
+              <div class="lead-top-badge">
+                <span class="plate-tag">{leadItem.plateNumber}</span>
+                <span class="place-tag">⌖ {leadItem.place}</span>
+              </div>
+              <div class="lead-bottom-info">
+                <span class="category-pill">{leadItem.category}</span>
+                <h2 class="lead-title">{leadItem.overlayTitle || leadItem.title}</h2>
+                <p class="lead-sub">{leadItem.subtitle}</p>
+              </div>
+            </div>
+            <div class="lead-hint">
+              <span>点击展卷阅读 / Open Monograph ↗</span>
+            </div>
+          </div>
+          <div class="card-caption">
+            <div class="caption-left">
+              <span class="caption-title">{leadItem.title}</span>
+              <span class="caption-date">{leadItem.dateLabel}</span>
+            </div>
+            {leadItem.exif && (
+              <div class="caption-right">
+                <span class="caption-exif">{leadItem.exif.camera} · {leadItem.exif.focalLength} · {leadItem.exif.aperture}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Section 2: Diptych Spread (双联对页) -->
+    {pairItems.length > 0 && (
+      <section class="spread-section spread-diptych">
+        <div class="diptych-grid">
+          {pairItems.map((item) => (
+            <article class="diptych-card" data-open-artbook={item.id}>
+              <div class="diptych-frame">
+                <img src={item.image} alt={item.title} class="diptych-image" loading="lazy" />
+                <div class="diptych-hover-info">
+                  <span class="diptych-plate">{item.plateNumber}</span>
+                  <span class="diptych-open">展卷阅读 ↗</span>
+                </div>
+              </div>
+              <div class="diptych-caption">
+                <div class="diptych-head">
+                  <span class="diptych-num">{item.plateNumber}</span>
+                  <span class="diptych-category">{item.category}</span>
+                </div>
+                <h3 class="diptych-title">{item.title}</h3>
+                <p class="diptych-desc">{item.subtitle}</p>
+                <div class="diptych-meta">
+                  <span>{item.place}</span>
+                  <span>{item.dateLabel}</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Section 3: Feature Plate (宽幅物语特写) -->
+    {featureItem && (
+      <section class="spread-section spread-feature">
+        <div class="feature-card" data-open-artbook={featureItem.id}>
+          <div class="feature-aside">
+            <div class="feature-tag-row">
+              <span class="plate-tag">{featureItem.plateNumber}</span>
+              <span class="category-pill">{featureItem.category}</span>
+            </div>
+            <h2 class="feature-title">{featureItem.title}</h2>
+            <p class="feature-subtitle">{featureItem.subtitle}</p>
+            <blockquote class="feature-quote">
+              “{featureItem.story || featureItem.readme}”
+            </blockquote>
+            <div class="feature-meta-footer">
+              <div class="meta-row">
+                <span class="m-k">拍摄地点</span>
+                <span class="m-v">{featureItem.place}</span>
+              </div>
+              <div class="meta-row">
+                <span class="m-k">快门时间</span>
+                <span class="m-v">{featureItem.dateLabel}</span>
+              </div>
+              {featureItem.exif && (
+                <div class="meta-row">
+                  <span class="m-k">摄影装备</span>
+                  <span class="m-v">{featureItem.exif.camera} ({featureItem.exif.lens})</span>
+                </div>
+              )}
+            </div>
+            <div class="feature-action-hint">
+              <span>点击展卷查看高清大图 ↗</span>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src={featureItem.image} alt={featureItem.title} class="feature-image" loading="lazy" />
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Section 4: Remaining Items (if any) -->
+    {remainingItems.length > 0 && (
+      <section class="spread-section spread-more">
+        <div class="more-grid">
+          {remainingItems.map((item) => (
+            <article class="more-card" data-open-artbook={item.id}>
+              <div class="more-frame">
+                <img src={item.image} alt={item.title} loading="lazy" />
+              </div>
+              <div class="more-info">
+                <span class="more-plate">{item.plateNumber}</span>
+                <h4 class="more-title">{item.title}</h4>
+                <span class="more-place">{item.place}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+
+  <!-- Fullscreen Book Lightbox -->
+  <BookLightbox items={items} />
+</div>
+
+<style>
+  .artbook-spread-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  /* Prologue / Book Spine */
+  .artbook-prologue {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 16px;
+    padding: 36px 40px;
+    display: grid;
+    grid-template-columns: 180px 1fr 180px;
+    gap: 32px;
+    align-items: start;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  }
+
+  .prologue-spine {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .spine-badge {
+    display: inline-block;
+    width: fit-content;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    background: #111;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  }
+
+  .spine-edition {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #888;
+    line-height: 1.4;
+  }
+
+  .prologue-main {
+    border-left: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    padding: 0 32px;
+  }
+
+  .prologue-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: #1a1a1a;
+    margin: 0 0 6px;
+  }
+
+  .prologue-subtitle {
+    font-size: 0.88rem;
+    color: #777;
+    margin: 0 0 16px;
+    letter-spacing: 0.02em;
+  }
+
+  .prologue-note p {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: #444;
+    margin: 0;
+  }
+
+  .prologue-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .meta-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: #999;
+    text-transform: uppercase;
+  }
+
+  .meta-value {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #222;
+  }
+
+  /* Gallery Spreads */
+  .artbook-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .spread-section {
+    width: 100%;
+  }
+
+  /* Section 1: Lead */
+  .lead-card {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  }
+
+  .lead-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  }
+
+  .lead-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #0d0f12;
+    overflow: hidden;
+  }
+
+  .lead-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .lead-card:hover .lead-image {
+    transform: scale(1.02);
+  }
+
+  .lead-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.65) 100%);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #fff;
+  }
+
+  .lead-top-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .plate-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.08em;
+  }
+
+  .place-tag {
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    opacity: 0.9;
+  }
+
+  .category-pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #ff8a65;
+    margin-bottom: 6px;
+  }
+
+  .lead-title {
+    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0 0 6px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  .lead-sub {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin: 0;
+  }
+
+  .lead-hint {
+    position: absolute;
+    bottom: 24px;
+    right: 32px;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .card-caption {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f0f0f0;
+    font-size: 0.85rem;
+  }
+
+  .caption-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .caption-title {
+    font-weight: 600;
+    color: #222;
+  }
+
+  .caption-date {
+    color: #888;
+    font-size: 0.8rem;
+  }
+
+  .caption-exif {
+    color: #888;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-size: 0.78rem;
+  }
+
+  /* Section 2: Diptych (双联对页) */
+  .diptych-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .diptych-card {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .diptych-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  }
+
+  .diptych-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #f4f4f5;
+    overflow: hidden;
+  }
+
+  .diptych-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+  }
+
+  .diptych-card:hover .diptych-image {
+    transform: scale(1.03);
+  }
+
+  .diptych-hover-info {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 16px;
+    color: #fff;
+  }
+
+  .diptych-card:hover .diptych-hover-info {
+    opacity: 1;
+  }
+
+  .diptych-plate {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  .diptych-open {
+    font-size: 0.78rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .diptych-caption {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .diptych-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .diptych-num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-weight: 600;
+    color: #ff5e3a;
+  }
+
+  .diptych-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 2px 0 0;
+  }
+
+  .diptych-desc {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .diptych-meta {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    color: #999;
+    border-top: 1px solid #f4f4f5;
+    padding-top: 8px;
+  }
+
+  /* Section 3: Feature Plate (宽幅图文并茂) */
+  .feature-card {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 16px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  }
+
+  .feature-aside {
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    background: #fafafc;
+    border-right: 1px solid #eaeaea;
+  }
+
+  .feature-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .feature-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
+  }
+
+  .feature-subtitle {
+    font-size: 0.88rem;
+    color: #666;
+    margin: -8px 0 0;
+  }
+
+  .feature-quote {
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: #444;
+    margin: 0;
+    padding-left: 14px;
+    border-left: 2px solid #ff8a65;
+    font-style: normal;
+  }
+
+  .feature-meta-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid #e8e8ec;
+    padding-top: 14px;
+    font-size: 0.78rem;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .m-k {
+    color: #888;
+  }
+
+  .m-v {
+    color: #333;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  }
+
+  .feature-action-hint {
+    font-size: 0.8rem;
+    color: #ff5e3a;
+    font-weight: 500;
+  }
+
+  .feature-media {
+    position: relative;
+    background: #0d0f12;
+    min-height: 320px;
+  }
+
+  .feature-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Responsive */
+  @media (max-width: 960px) {
+    .artbook-prologue {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: 24px;
+    }
+    .prologue-main {
+      border-left: 0;
+      border-right: 0;
+      padding: 16px 0;
+      border-top: 1px solid #f0f0f0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .prologue-meta {
+      flex-direction: row;
+      gap: 24px;
+    }
+    .feature-card {
+      grid-template-columns: 1fr;
+    }
+    .feature-aside {
+      border-right: 0;
+      border-bottom: 1px solid #eaeaea;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .diptych-grid {
+      grid-template-columns: 1fr;
+    }
+    .lead-media {
+      aspect-ratio: 4 / 3;
+    }
+    .lead-overlay {
+      padding: 18px 20px;
+    }
+    .lead-title {
+      font-size: 1.4rem;
+    }
+    .lead-hint {
+      display: none;
+    }
+  }
+</style>

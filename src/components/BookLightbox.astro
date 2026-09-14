@@ -1,0 +1,592 @@
+---
+import type { GalleryItem } from '../data/galleryItems';
+
+interface Props {
+  items: GalleryItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div id="artbook-lightbox" class="artbook-lightbox" role="dialog" aria-modal="true" aria-label="画集展卷阅读器" hidden>
+  <div class="lightbox-backdrop" data-lightbox-close></div>
+
+  <div class="lightbox-container">
+    <header class="lightbox-header">
+      <div class="lightbox-brand">
+        <span class="lightbox-logo-dot"></span>
+        <span class="lightbox-vol-title">ARTBOOK MONOGRAPH</span>
+        <span class="lightbox-divider">/</span>
+        <span class="lightbox-counter" data-lightbox-counter>01 / {items.length.toString().padStart(2, '0')}</span>
+      </div>
+
+      <button class="lightbox-btn-close" type="button" aria-label="关闭阅读器 (Esc)" data-lightbox-close>
+        <span class="close-icon">✕</span>
+        <span class="close-tip">ESC</span>
+      </button>
+    </header>
+
+    <div class="lightbox-body">
+      <!-- Image Stage -->
+      <div class="lightbox-stage">
+        <button class="nav-arrow nav-arrow-prev" type="button" aria-label="上一幅 (←)" data-lightbox-prev>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <div class="stage-frame">
+          <img id="lightbox-image" class="lightbox-image" src="" alt="" />
+        </div>
+
+        <button class="nav-arrow nav-arrow-next" type="button" aria-label="下一幅 (→)" data-lightbox-next>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Curatorial Folio / Story Panel -->
+      <aside class="lightbox-folio">
+        <div class="folio-content">
+          <div class="folio-header">
+            <span class="folio-plate" data-folio-plate>№ 01</span>
+            <span class="folio-category" data-folio-category>Nature</span>
+          </div>
+
+          <h2 class="folio-title" data-folio-title>作品标题</h2>
+          <p class="folio-subtitle" data-folio-subtitle>作品副标题</p>
+
+          <div class="folio-meta-tags">
+            <span class="meta-tag" data-folio-place>⌖ Zhenjiang, China</span>
+            <span class="meta-tag" data-folio-date>Sep 2023</span>
+          </div>
+
+          <div class="folio-divider"></div>
+
+          <div class="folio-story-section">
+            <h3 class="story-heading">作品手记 / Curator's Note</h3>
+            <p class="folio-story" data-folio-story>
+              作品随笔内容...
+            </p>
+          </div>
+
+          <!-- EXIF Card -->
+          <div class="folio-exif-card" data-folio-exif-wrap>
+            <div class="exif-header">
+              <span class="exif-icon">📷</span>
+              <span class="exif-title">TECH & EXIF DATA</span>
+            </div>
+            <div class="exif-grid">
+              <div class="exif-item">
+                <span class="exif-label">CAMERA</span>
+                <span class="exif-val" data-exif-camera>-</span>
+              </div>
+              <div class="exif-item">
+                <span class="exif-label">LENS</span>
+                <span class="exif-val" data-exif-lens>-</span>
+              </div>
+              <div class="exif-item">
+                <span class="exif-label">FOCAL</span>
+                <span class="exif-val" data-exif-focal>-</span>
+              </div>
+              <div class="exif-item">
+                <span class="exif-label">APERTURE</span>
+                <span class="exif-val" data-exif-aperture>-</span>
+              </div>
+              <div class="exif-item">
+                <span class="exif-label">SHUTTER</span>
+                <span class="exif-val" data-exif-shutter>-</span>
+              </div>
+              <div class="exif-item">
+                <span class="exif-label">ISO</span>
+                <span class="exif-val" data-exif-iso>-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Readme link -->
+          <div class="folio-actions">
+            <a id="lightbox-readme-link" href="#" class="folio-link-detail">
+              <span>独立展页 Monograph Page →</span>
+            </a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ items }}>
+  const lightbox = document.getElementById('artbook-lightbox');
+  if (lightbox) {
+    let currentIndex = 0;
+
+    const imgEl = document.getElementById('lightbox-image');
+    const counterEl = lightbox.querySelector('[data-lightbox-counter]');
+    const plateEl = lightbox.querySelector('[data-folio-plate]');
+    const categoryEl = lightbox.querySelector('[data-folio-category]');
+    const titleEl = lightbox.querySelector('[data-folio-title]');
+    const subtitleEl = lightbox.querySelector('[data-folio-subtitle]');
+    const placeEl = lightbox.querySelector('[data-folio-place]');
+    const dateEl = lightbox.querySelector('[data-folio-date]');
+    const storyEl = lightbox.querySelector('[data-folio-story]');
+    const exifWrap = lightbox.querySelector('[data-folio-exif-wrap]');
+    const exifCamera = lightbox.querySelector('[data-exif-camera]');
+    const exifLens = lightbox.querySelector('[data-exif-lens]');
+    const exifFocal = lightbox.querySelector('[data-exif-focal]');
+    const exifAperture = lightbox.querySelector('[data-exif-aperture]');
+    const exifShutter = lightbox.querySelector('[data-exif-shutter]');
+    const exifIso = lightbox.querySelector('[data-exif-iso]');
+    const detailLink = document.getElementById('lightbox-readme-link');
+
+    const renderItem = (index) => {
+      if (index < 0 || index >= items.length) return;
+      currentIndex = index;
+      const item = items[index];
+
+      if (imgEl) {
+        imgEl.src = item.image;
+        imgEl.alt = item.title;
+      }
+      if (counterEl) {
+        counterEl.textContent = `${(index + 1).toString().padStart(2, '0')} / ${items.length.toString().padStart(2, '0')}`;
+      }
+      if (plateEl) plateEl.textContent = item.plateNumber || `№ ${(index + 1).toString().padStart(2, '0')}`;
+      if (categoryEl) categoryEl.textContent = item.category;
+      if (titleEl) titleEl.textContent = item.title;
+      if (subtitleEl) {
+        subtitleEl.textContent = item.subtitle || item.overlayTitle || '';
+        subtitleEl.style.display = item.subtitle || item.overlayTitle ? 'block' : 'none';
+      }
+      if (placeEl) placeEl.textContent = `⌖ ${item.place}`;
+      if (dateEl) dateEl.textContent = item.dateLabel;
+      if (storyEl) storyEl.textContent = item.story || item.readme || '暂无随笔。';
+
+      if (item.exif) {
+        if (exifWrap) exifWrap.style.display = 'block';
+        if (exifCamera) exifCamera.textContent = item.exif.camera || '-';
+        if (exifLens) exifLens.textContent = item.exif.lens || '-';
+        if (exifFocal) exifFocal.textContent = item.exif.focalLength || '-';
+        if (exifAperture) exifAperture.textContent = item.exif.aperture || '-';
+        if (exifShutter) exifShutter.textContent = item.exif.shutter || '-';
+        if (exifIso) exifIso.textContent = item.exif.iso || '-';
+      } else if (exifWrap) {
+        exifWrap.style.display = 'none';
+      }
+
+      if (detailLink) {
+        detailLink.href = `/gallery/${item.id}`;
+      }
+    };
+
+    const openLightbox = (index) => {
+      renderItem(index);
+      lightbox.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        lightbox.classList.add('is-open');
+      }, 10);
+    };
+
+    const closeLightbox = () => {
+      lightbox.classList.remove('is-open');
+      setTimeout(() => {
+        lightbox.setAttribute('hidden', '');
+        document.body.style.overflow = '';
+      }, 250);
+    };
+
+    const nextItem = () => {
+      const nextIndex = (currentIndex + 1) % items.length;
+      renderItem(nextIndex);
+    };
+
+    const prevItem = () => {
+      const prevIndex = (currentIndex - 1 + items.length) % items.length;
+      renderItem(prevIndex);
+    };
+
+    // Close buttons & backdrop
+    lightbox.querySelectorAll('[data-lightbox-close]').forEach((el) => {
+      el.addEventListener('click', closeLightbox);
+    });
+
+    lightbox.querySelector('[data-lightbox-next]')?.addEventListener('click', nextItem);
+    lightbox.querySelector('[data-lightbox-prev]')?.addEventListener('click', prevItem);
+
+    // Keyboard support
+    window.addEventListener('keydown', (e) => {
+      if (lightbox.hasAttribute('hidden')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') nextItem();
+      if (e.key === 'ArrowLeft') prevItem();
+    });
+
+    // Expose open trigger to global window
+    window.openArtBookLightbox = (idOrIndex) => {
+      if (typeof idOrIndex === 'number') {
+        openLightbox(idOrIndex);
+      } else {
+        const found = items.findIndex((it) => it.id === idOrIndex);
+        openLightbox(found >= 0 ? found : 0);
+      }
+    };
+
+    // Auto-bind click on elements with data-open-artbook
+    const bindTriggers = () => {
+      document.querySelectorAll('[data-open-artbook]').forEach((el) => {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = el.getAttribute('data-open-artbook');
+          window.openArtBookLightbox(targetId);
+        });
+      });
+    };
+
+    bindTriggers();
+    document.addEventListener('astro:page-load', bindTriggers);
+  }
+</script>
+
+<style>
+  .artbook-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .artbook-lightbox.is-open {
+    opacity: 1;
+  }
+
+  .lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 15, 18, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .lightbox-container {
+    position: relative;
+    z-index: 2;
+    width: min(1360px, 94vw);
+    height: min(860px, 90vh);
+    background: #15181e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Header */
+  .lightbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(21, 24, 30, 0.95);
+  }
+
+  .lightbox-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    color: rgba(255, 255, 255, 0.65);
+    font-weight: 500;
+  }
+
+  .lightbox-logo-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff5e3a;
+  }
+
+  .lightbox-divider {
+    opacity: 0.3;
+  }
+
+  .lightbox-counter {
+    color: #fff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+  }
+
+  .lightbox-btn-close {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .lightbox-btn-close:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+
+  .close-tip {
+    font-size: 0.7rem;
+    opacity: 0.5;
+  }
+
+  /* Body */
+  .lightbox-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Stage (Image) */
+  .lightbox-stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 36px;
+    background: #0d0f12;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .stage-frame {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+
+  .nav-arrow:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scale(1.08);
+  }
+
+  .nav-arrow-prev {
+    left: 18px;
+  }
+
+  .nav-arrow-next {
+    right: 18px;
+  }
+
+  /* Folio (Story & Meta) */
+  .lightbox-folio {
+    padding: 40px 36px;
+    overflow-y: auto;
+    color: #f0f0f2;
+    background: #15181e;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  .folio-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .folio-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .folio-plate {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+    color: #ff8a65;
+  }
+
+  .folio-category {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .folio-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  .folio-subtitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .folio-meta-tags {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .meta-tag {
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .folio-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 8px 0;
+  }
+
+  .story-heading {
+    font-size: 0.76rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 8px;
+  }
+
+  .folio-story {
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.82);
+    margin: 0;
+  }
+
+  /* EXIF */
+  .folio-exif-card {
+    margin-top: 8px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+  }
+
+  .exif-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 12px;
+  }
+
+  .exif-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 16px;
+  }
+
+  .exif-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .exif-label {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.35);
+    letter-spacing: 0.1em;
+  }
+
+  .exif-val {
+    font-size: 0.82rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .folio-actions {
+    margin-top: 10px;
+    padding-top: 12px;
+  }
+
+  .folio-link-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    color: #ff8a65;
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: opacity 0.2s ease;
+  }
+
+  .folio-link-detail:hover {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 900px) {
+    .lightbox-container {
+      height: 94vh;
+    }
+    .lightbox-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1.1fr 1fr;
+    }
+    .lightbox-stage {
+      border-right: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 20px;
+    }
+    .lightbox-folio {
+      padding: 24px 20px;
+    }
+    .folio-title {
+      font-size: 1.4rem;
+    }
+  }
+</style>
