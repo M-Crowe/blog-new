@@ -15,7 +15,7 @@ const { items } = Astro.props;
     <header class="lightbox-header">
       <div class="lightbox-brand">
         <span class="lightbox-logo-dot"></span>
-        <span class="lightbox-vol-title">ARTBOOK MONOGRAPH</span>
+        <span class="lightbox-vol-title">春影幽光 · 摄影画集</span>
         <span class="lightbox-divider">/</span>
         <span class="lightbox-counter" data-lightbox-counter>01 / {items.length.toString().padStart(2, '0')}</span>
       </div>
@@ -30,7 +30,7 @@ const { items } = Astro.props;
       <!-- Image Stage -->
       <div class="lightbox-stage">
         <button class="nav-arrow nav-arrow-prev" type="button" aria-label="上一幅 (←)" data-lightbox-prev>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
@@ -40,7 +40,7 @@ const { items } = Astro.props;
         </div>
 
         <button class="nav-arrow nav-arrow-next" type="button" aria-label="下一幅 (→)" data-lightbox-next>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
@@ -51,7 +51,7 @@ const { items } = Astro.props;
         <div class="folio-content">
           <div class="folio-header">
             <span class="folio-plate" data-folio-plate>№ 01</span>
-            <span class="folio-category" data-folio-category>Nature</span>
+            <span class="folio-category" data-folio-category>Night / Blossom</span>
           </div>
 
           <h2 class="folio-title" data-folio-title>作品标题</h2>
@@ -59,13 +59,13 @@ const { items } = Astro.props;
 
           <div class="folio-meta-tags">
             <span class="meta-tag" data-folio-place>⌖ Zhenjiang, China</span>
-            <span class="meta-tag" data-folio-date>Sep 2023</span>
+            <span class="meta-tag" data-folio-date>2024年4月3日</span>
           </div>
 
           <div class="folio-divider"></div>
 
           <div class="folio-story-section">
-            <h3 class="story-heading">作品手记 / Curator's Note</h3>
+            <h3 class="story-heading">作品随笔 / Curator's Note</h3>
             <p class="folio-story" data-folio-story>
               作品随笔内容...
             </p>
@@ -75,7 +75,7 @@ const { items } = Astro.props;
           <div class="folio-exif-card" data-folio-exif-wrap>
             <div class="exif-header">
               <span class="exif-icon">📷</span>
-              <span class="exif-title">TECH & EXIF DATA</span>
+              <span class="exif-title">原生 EXIF 拍摄参数</span>
             </div>
             <div class="exif-grid">
               <div class="exif-item">
@@ -108,7 +108,7 @@ const { items } = Astro.props;
           <!-- Readme link -->
           <div class="folio-actions">
             <a id="lightbox-readme-link" href="#" class="folio-link-detail">
-              <span>独立展页 Monograph Page →</span>
+              <span>查看单幅特写详情页 →</span>
             </a>
           </div>
         </div>
@@ -266,7 +266,7 @@ const { items } = Astro.props;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .artbook-lightbox[hidden] {
@@ -281,23 +281,23 @@ const { items } = Astro.props;
   .lightbox-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(13, 15, 18, 0.88);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(245, 245, 247, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
 
   .lightbox-container {
     position: relative;
     z-index: 2;
-    width: min(1360px, 94vw);
-    height: min(860px, 90vh);
-    background: #15181e;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: min(1280px, 92vw);
+    height: min(840px, 88vh);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 16px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.03);
   }
 
   /* Header */
@@ -306,59 +306,61 @@ const { items } = Astro.props;
     align-items: center;
     justify-content: space-between;
     padding: 16px 28px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(21, 24, 30, 0.95);
+    border-bottom: 1px solid #eeeeee;
+    background: #fafafb;
   }
 
   .lightbox-brand {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 0.82rem;
-    letter-spacing: 0.14em;
-    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    color: #2C2C2C;
     font-weight: 500;
   }
 
   .lightbox-logo-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background: #ff5e3a;
+    background: #2C2C2C;
   }
 
   .lightbox-divider {
-    opacity: 0.3;
+    color: #cccccc;
   }
 
   .lightbox-counter {
-    color: #fff;
+    color: #666666;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
 
   .lightbox-btn-close {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.8);
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    color: #2C2C2C;
     padding: 6px 14px;
     border-radius: 999px;
     font-size: 0.78rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
   .lightbox-btn-close:hover {
-    background: rgba(255, 255, 255, 0.14);
-    color: #fff;
+    background: #f0f0f0;
+    border-color: #d0d0d0;
   }
 
   .close-tip {
     font-size: 0.7rem;
-    opacity: 0.5;
+    color: #888888;
   }
 
   /* Body */
@@ -377,8 +379,8 @@ const { items } = Astro.props;
     align-items: center;
     justify-content: center;
     padding: 36px;
-    background: #0d0f12;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: #f7f7f9;
+    border-right: 1px solid #eeeeee;
   }
 
   .stage-frame {
@@ -393,8 +395,9 @@ const { items } = Astro.props;
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+    background: #fff;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -402,24 +405,26 @@ const { items } = Astro.props;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #fff;
+    border: 1px solid #e0e0e0;
+    color: #2C2C2C;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
     z-index: 10;
   }
 
   .nav-arrow:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-50%) scale(1.08);
+    background: #ffffff;
+    border-color: #bbb;
+    transform: translateY(-50%) scale(1.06);
   }
 
   .nav-arrow-prev {
@@ -432,12 +437,12 @@ const { items } = Astro.props;
 
   /* Folio (Story & Meta) */
   .lightbox-folio {
-    padding: 40px 36px;
+    padding: 36px 32px;
     overflow-y: auto;
-    color: #f0f0f2;
-    background: #15181e;
+    color: #2C2C2C;
+    background: #ffffff;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    scrollbar-color: #d1d5db transparent;
   }
 
   .folio-content {
@@ -451,80 +456,87 @@ const { items } = Astro.props;
     align-items: center;
     justify-content: space-between;
     font-size: 0.8rem;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
   .folio-plate {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 700;
-    color: #ff8a65;
+    color: #111111;
+    background: #f0f0f2;
+    padding: 3px 8px;
+    border-radius: 4px;
   }
 
   .folio-category {
-    color: rgba(255, 255, 255, 0.45);
+    color: #888888;
+    font-weight: 500;
   }
 
   .folio-title {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.25;
-    color: #ffffff;
+    color: #1a1a1a;
     margin: 0;
   }
 
   .folio-subtitle {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.92rem;
+    color: #666666;
     line-height: 1.5;
-    margin: 0;
+    margin: -4px 0 0;
   }
 
   .folio-meta-tags {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   .meta-tag {
     font-size: 0.76rem;
-    letter-spacing: 0.04em;
     padding: 4px 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #f5f5f7;
+    border: 1px solid #e8e8ec;
     border-radius: 6px;
-    color: rgba(255, 255, 255, 0.7);
+    color: #555555;
   }
 
   .folio-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.08);
-    margin: 8px 0;
+    background: #eeeeee;
+    margin: 6px 0;
   }
 
   .story-heading {
-    font-size: 0.76rem;
-    letter-spacing: 0.14em;
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
+    color: #888888;
     margin-bottom: 8px;
   }
 
   .folio-story {
     font-size: 0.92rem;
-    line-height: 1.75;
-    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.8;
+    color: #374151;
     margin: 0;
+    background: #fafafb;
+    border-left: 3px solid #2C2C2C;
+    padding: 14px 16px;
+    border-radius: 0 8px 8px 0;
   }
 
-  /* EXIF */
+  /* EXIF Card */
   .folio-exif-card {
-    margin-top: 8px;
-    padding: 16px;
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 6px;
+    padding: 16px 18px;
+    background: #fafafb;
+    border: 1px solid #eeeeee;
     border-radius: 10px;
   }
 
@@ -533,8 +545,9 @@ const { items } = Astro.props;
     align-items: center;
     gap: 8px;
     font-size: 0.74rem;
-    letter-spacing: 0.12em;
-    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.08em;
+    color: #666666;
+    font-weight: 600;
     margin-bottom: 12px;
   }
 
@@ -552,39 +565,41 @@ const { items } = Astro.props;
 
   .exif-label {
     font-size: 0.68rem;
-    color: rgba(255, 255, 255, 0.35);
-    letter-spacing: 0.1em;
+    color: #999999;
+    letter-spacing: 0.08em;
   }
 
   .exif-val {
     font-size: 0.82rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    color: rgba(255, 255, 255, 0.85);
+    color: #222222;
+    font-weight: 500;
   }
 
   .folio-actions {
-    margin-top: 10px;
-    padding-top: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
   }
 
   .folio-link-detail {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.82rem;
-    color: #ff8a65;
-    text-decoration: none;
-    letter-spacing: 0.04em;
-    transition: opacity 0.2s ease;
+    font-size: 0.85rem;
+    color: #2C2C2C;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: color 0.2s ease;
   }
 
   .folio-link-detail:hover {
-    opacity: 0.8;
+    color: #000000;
   }
 
   @media (max-width: 900px) {
     .lightbox-container {
-      height: 94vh;
+      height: 92vh;
     }
     .lightbox-body {
       grid-template-columns: 1fr;
@@ -592,14 +607,15 @@ const { items } = Astro.props;
     }
     .lightbox-stage {
       border-right: 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid #eeeeee;
       padding: 20px;
     }
     .lightbox-folio {
-      padding: 24px 20px;
+      padding: 22px 20px;
     }
     .folio-title {
       font-size: 1.4rem;
     }
   }
 </style>
+
