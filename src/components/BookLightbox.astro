@@ -461,8 +461,14 @@ const { items } = Astro.props;
     overflow-y: auto;
     color: #2C2C2C;
     background: #ffffff;
-    scrollbar-width: thin;
-    scrollbar-color: #d1d5db transparent;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .lightbox-folio::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .folio-content {

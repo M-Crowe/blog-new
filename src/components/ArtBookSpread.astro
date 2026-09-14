@@ -16,14 +16,53 @@ const effectiveVolumes = volumes && volumes.length > 0
   : (volume ? [volume] : []);
 
 const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
+
+// 依据用户指定规则将相册切分为不同的行：
+// 1个 -> 1行1个
+// 2个 -> 1行2个
+// 3个 -> 1行3个
+// 4个 -> 2行，每行2个
+// 5个 -> 上面1行2个，下面1行3个
+const getVolumeRows = (items: GalleryItem[]): GalleryItem[][] => {
+  const count = items.length;
+  if (count <= 3) {
+    return [items];
+  }
+  if (count === 4) {
+    return [items.slice(0, 2), items.slice(2, 4)];
+  }
+  if (count === 5) {
+    return [items.slice(0, 2), items.slice(2, 5)];
+  }
+  
+  const rows: GalleryItem[][] = [];
+  let idx = 0;
+  while (idx < count) {
+    const remaining = count - idx;
+    if (remaining === 5) {
+      rows.push(items.slice(idx, idx + 2));
+      rows.push(items.slice(idx + 2, idx + 5));
+      break;
+    } else if (remaining === 4) {
+      rows.push(items.slice(idx, idx + 2));
+      rows.push(items.slice(idx + 2, idx + 4));
+      break;
+    } else if (remaining === 2) {
+      rows.push(items.slice(idx, idx + 2));
+      break;
+    } else {
+      const take = Math.min(3, remaining);
+      rows.push(items.slice(idx, idx + take));
+      idx += take;
+    }
+  }
+  return rows;
+};
 ---
 
 <div class="artbook-spread-wrapper">
-  {effectiveVolumes.map((vol, volIdx) => {
-    const volItems = vol.items;
-    const isTwoItems = volItems.length === 2;
-    const lead = isTwoItems ? null : volItems[0];
-    const pair = isTwoItems ? volItems : volItems.slice(1, 3);
+  {effectiveVolumes.map((vol) => {
+    const rows = getVolumeRows(vol.items);
 
     return (
       <article class="volume-container" data-volume-id={vol.volId}>
@@ -43,7 +82,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
             <div class="prologue-meta">
               <div class="meta-item">
                 <span class="meta-label">收录作品</span>
-                <span class="meta-value">{volItems.length} 帧切片</span>
+                <span class="meta-value">{vol.items.length} 帧切片</span>
               </div>
               <div class="meta-item">
                 <span class="meta-label">装帧格式</span>
@@ -54,70 +93,33 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
         )}
 
         <div class="artbook-gallery">
-          {lead && (
-            <section class="spread-section spread-lead">
-              <div class="lead-card" data-open-artbook={lead.id}>
-                <div class="lead-media">
-                  <img src={lead.image} alt={lead.title} class="lead-image" loading={volIdx === 0 ? 'eager' : 'lazy'} />
-                  <div class="lead-overlay">
-                    <div class="lead-top-badge">
-                      <span class="plate-tag">{lead.plateNumber}</span>
-                      <span class="place-tag">⌖ {lead.place}</span>
-                    </div>
-                    <div class="lead-bottom-info">
-                      <span class="category-pill">{lead.category}</span>
-                      <h3 class="lead-title">{lead.overlayTitle || lead.title}</h3>
-                      <p class="lead-sub">{lead.subtitle}</p>
+          {rows.map((row) => (
+            <div class={`spread-row grid-${row.length}`}>
+              {row.map((item) => (
+                <article class="gallery-card" data-open-artbook={item.id}>
+                  <div class="card-media">
+                    <img src={item.image} alt={item.title} class="card-image" loading="lazy" />
+                    <div class="card-hover-overlay">
+                      <span class="hover-plate">{item.plateNumber}</span>
+                      <span class="hover-action">展卷阅读 ↗</span>
                     </div>
                   </div>
-                  <div class="lead-hint">
-                    <span>点击展卷阅读 / Open Monograph ↗</span>
+                  <div class="card-info">
+                    <div class="card-head">
+                      <span class="card-num">{item.plateNumber}</span>
+                      <span class="card-category">{item.category}</span>
+                    </div>
+                    <h3 class="card-title">{item.title}</h3>
+                    {item.subtitle && <p class="card-desc">{item.subtitle}</p>}
+                    <div class="card-meta">
+                      <span>{item.place}</span>
+                      <span>{item.dateLabel}</span>
+                    </div>
                   </div>
-                </div>
-                <div class="card-caption">
-                  <div class="caption-left">
-                    <span class="caption-title">{lead.title}</span>
-                    <span class="caption-date">{lead.dateLabel}</span>
-                  </div>
-                  {lead.exif && (
-                    <div class="caption-right">
-                      <span class="caption-exif">{lead.exif.camera} · {lead.exif.focalLength} · {lead.exif.aperture}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {pair.length > 0 && (
-            <section class="spread-section spread-diptych">
-              <div class="diptych-grid">
-                {pair.map((item) => (
-                  <article class="diptych-card" data-open-artbook={item.id}>
-                    <div class="diptych-frame">
-                      <img src={item.image} alt={item.title} class="diptych-image" loading="lazy" />
-                      <div class="diptych-hover-info">
-                        <span class="diptych-plate">{item.plateNumber}</span>
-                        <span class="diptych-open">展卷阅读 ↗</span>
-                      </div>
-                    </div>
-                    <div class="diptych-caption">
-                      <div class="diptych-head">
-                        <span class="diptych-num">{item.plateNumber}</span>
-                        <span class="diptych-category">{item.category}</span>
-                      </div>
-                      <h4 class="diptych-title">{item.title}</h4>
-                      <p class="diptych-desc">{item.subtitle}</p>
-                      <div class="diptych-meta">
-                        <span>{item.place}</span>
-                        <span>{item.dateLabel}</span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          )}
+                </article>
+              ))}
+            </div>
+          ))}
         </div>
       </article>
     );
@@ -131,7 +133,13 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
   .artbook-spread-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 48px;
+    gap: 56px;
+  }
+
+  .volume-container {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
   }
 
   /* Prologue / Book Spine */
@@ -139,7 +147,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     background: #ffffff;
     border: 1px solid #eaeaea;
     border-radius: 16px;
-    padding: 36px 40px;
+    padding: 32px 36px;
     display: grid;
     grid-template-columns: 180px 1fr 180px;
     gap: 32px;
@@ -163,7 +171,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     color: #fff;
     padding: 4px 10px;
     border-radius: 4px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 
   .spine-edition {
@@ -181,7 +189,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
   }
 
   .prologue-title {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     font-weight: 600;
     letter-spacing: -0.03em;
     color: #1a1a1a;
@@ -191,7 +199,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
   .prologue-subtitle {
     font-size: 0.88rem;
     color: #777;
-    margin: 0 0 16px;
+    margin: 0 0 14px;
     letter-spacing: 0.02em;
   }
 
@@ -205,7 +213,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
   .prologue-meta {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .meta-item {
@@ -227,167 +235,32 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     color: #222;
   }
 
-  /* Gallery Spreads */
+  /* Gallery Grid Rows */
   .artbook-gallery {
     display: flex;
     flex-direction: column;
-    gap: 40px;
-  }
-
-  .spread-section {
-    width: 100%;
-  }
-
-  /* Section 1: Lead */
-  .lead-card {
-    background: #ffffff;
-    border: 1px solid #eaeaea;
-    border-radius: 16px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
-  }
-
-  .lead-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
-  }
-
-  .lead-media {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: #0d0f12;
-    overflow: hidden;
-  }
-
-  .lead-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.4s ease;
-  }
-
-  .lead-card:hover .lead-image {
-    transform: scale(1.02);
-  }
-
-  .lead-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.65) 100%);
-    padding: 28px 32px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    color: #fff;
-  }
-
-  .lead-top-badge {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .plate-tag {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-    font-size: 0.82rem;
-    font-weight: 700;
-    background: rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(8px);
-    padding: 4px 10px;
-    border-radius: 4px;
-    letter-spacing: 0.08em;
-  }
-
-  .place-tag {
-    font-size: 0.82rem;
-    letter-spacing: 0.06em;
-    opacity: 0.9;
-  }
-
-  .category-pill {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(0, 0, 0, 0.35);
-    padding: 3px 8px;
-    border-radius: 4px;
-    backdrop-filter: blur(4px);
-    margin-bottom: 6px;
-  }
-
-  .lead-title {
-    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-    margin: 0 0 6px;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  }
-
-  .lead-sub {
-    font-size: 0.95rem;
-    opacity: 0.85;
-    margin: 0;
-  }
-
-  .lead-hint {
-    position: absolute;
-    bottom: 24px;
-    right: 32px;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.9);
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(8px);
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .card-caption {
-    padding: 16px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid #f0f0f0;
-    font-size: 0.85rem;
-  }
-
-  .caption-left {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-
-  .caption-title {
-    font-weight: 600;
-    color: #222;
-  }
-
-  .caption-date {
-    color: #888;
-    font-size: 0.8rem;
-  }
-
-  .caption-exif {
-    color: #888;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-    font-size: 0.78rem;
-  }
-
-  /* Section 2: Diptych (双联对页) */
-  .diptych-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 24px;
   }
 
-  .diptych-card {
+  .spread-row {
+    display: grid;
+    gap: 24px;
+    width: 100%;
+  }
+
+  .spread-row.grid-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .spread-row.grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .spread-row.grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gallery-card {
     background: #ffffff;
     border: 1px solid #eaeaea;
     border-radius: 14px;
@@ -395,40 +268,45 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.2s ease;
   }
 
-  .diptych-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  .gallery-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+    border-color: #d8d8d8;
   }
 
-  .diptych-frame {
+  .card-media {
     position: relative;
     width: 100%;
     aspect-ratio: 4 / 3;
-    background: #f4f4f5;
+    background: #f4f4f6;
     overflow: hidden;
   }
 
-  .diptych-image {
+  .grid-1 .card-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .card-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.35s ease;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .diptych-card:hover .diptych-image {
-    transform: scale(1.03);
+  .gallery-card:hover .card-image {
+    transform: scale(1.04);
   }
 
-  .diptych-hover-info {
+  .card-hover-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.22s ease;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
@@ -436,32 +314,35 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     color: #fff;
   }
 
-  .diptych-card:hover .diptych-hover-info {
+  .gallery-card:hover .card-hover-overlay {
     opacity: 1;
   }
 
-  .diptych-plate {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  .hover-plate {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 700;
     font-size: 0.82rem;
+    letter-spacing: 0.06em;
   }
 
-  .diptych-open {
+  .hover-action {
     font-size: 0.78rem;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(6px);
-    padding: 4px 10px;
+    -webkit-backdrop-filter: blur(6px);
+    padding: 4px 12px;
     border-radius: 999px;
   }
 
-  .diptych-caption {
+  .card-info {
     padding: 18px 20px;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    flex: 1;
   }
 
-  .diptych-head {
+  .card-head {
     display: flex;
     justify-content: space-between;
     font-size: 0.76rem;
@@ -470,132 +351,35 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     letter-spacing: 0.08em;
   }
 
-  .diptych-num {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  .card-num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 700;
     color: #2C2C2C;
   }
 
-  .diptych-title {
+  .card-title {
     font-size: 1.15rem;
     font-weight: 600;
     color: #1a1a1a;
     margin: 2px 0 0;
+    line-height: 1.3;
   }
 
-  .diptych-desc {
+  .card-desc {
     font-size: 0.85rem;
     color: #666;
     line-height: 1.5;
     margin: 0;
   }
 
-  .diptych-meta {
-    margin-top: 6px;
+  .card-meta {
+    margin-top: auto;
+    padding-top: 10px;
     display: flex;
     justify-content: space-between;
     font-size: 0.76rem;
     color: #999;
     border-top: 1px solid #f4f4f5;
-    padding-top: 8px;
-  }
-
-  /* Section 3: Feature Plate (宽幅图文并茂) */
-  .feature-card {
-    background: #ffffff;
-    border: 1px solid #eaeaea;
-    border-radius: 16px;
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: 1fr 1.25fr;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-  }
-
-  .feature-aside {
-    padding: 36px 32px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 16px;
-    background: #fafafc;
-    border-right: 1px solid #eaeaea;
-  }
-
-  .feature-tag-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .feature-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 0;
-  }
-
-  .feature-subtitle {
-    font-size: 0.88rem;
-    color: #666;
-    margin: -8px 0 0;
-  }
-
-  .feature-quote {
-    font-size: 0.92rem;
-    line-height: 1.75;
-    color: #444;
-    margin: 0;
-    padding-left: 14px;
-    border-left: 2px solid #ff8a65;
-    font-style: normal;
-  }
-
-  .feature-meta-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border-top: 1px solid #e8e8ec;
-    padding-top: 14px;
-    font-size: 0.78rem;
-  }
-
-  .meta-row {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .m-k {
-    color: #888;
-  }
-
-  .m-v {
-    color: #333;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-  }
-
-  .feature-action-hint {
-    font-size: 0.8rem;
-    color: #ff5e3a;
-    font-weight: 500;
-  }
-
-  .feature-media {
-    position: relative;
-    background: #0d0f12;
-    min-height: 320px;
-  }
-
-  .feature-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
   }
 
   /* Responsive */
@@ -616,30 +400,15 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
       flex-direction: row;
       gap: 24px;
     }
-    .feature-card {
-      grid-template-columns: 1fr;
-    }
-    .feature-aside {
-      border-right: 0;
-      border-bottom: 1px solid #eaeaea;
+    .spread-row.grid-3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  @media (max-width: 680px) {
-    .diptych-grid {
+  @media (max-width: 640px) {
+    .spread-row.grid-2,
+    .spread-row.grid-3 {
       grid-template-columns: 1fr;
-    }
-    .lead-media {
-      aspect-ratio: 4 / 3;
-    }
-    .lead-overlay {
-      padding: 18px 20px;
-    }
-    .lead-title {
-      font-size: 1.4rem;
-    }
-    .lead-hint {
-      display: none;
     }
   }
 </style>
