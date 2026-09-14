@@ -3,6 +3,7 @@ import PostList from '../components/PostList.astro';
 import { getCollection } from 'astro:content';
 import { getCoverSnapshot, homepageCoverConfig } from '../lib/homepageCover';
 import { galleryItems } from '../data/galleryItems';
+import '../styles/global.css';
 
 const currentCover = homepageCoverConfig.manualCover || '';
 const coverSnapshot = getCoverSnapshot();

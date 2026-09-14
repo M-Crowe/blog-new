@@ -1,5 +1,6 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
+import '../../styles/global.css';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
