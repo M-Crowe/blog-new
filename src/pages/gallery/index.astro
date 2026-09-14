@@ -1,8 +1,6 @@
 ---
 import ArtBookSpread from '../../components/ArtBookSpread.astro';
-import { artVolumes, galleryItems } from '../../data/galleryItems';
-
-const currentVolume = artVolumes[0];
+import { artVolumes } from '../../data/galleryItems';
 ---
 
 <!DOCTYPE html>
@@ -196,7 +194,7 @@ const currentVolume = artVolumes[0];
 
       <!-- 画集主体展区 -->
       <main class="gallery-main">
-        <ArtBookSpread volume={currentVolume} items={galleryItems} showVolumeHeader={true} />
+        <ArtBookSpread volumes={artVolumes} showVolumeHeader={true} />
       </main>
 
       <!-- Footer -->

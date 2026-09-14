@@ -4,6 +4,8 @@ export type { ExifInfo };
 
 export interface GalleryItem {
   id: string;
+  volumeId: string;
+  volumeName: string;
   title: string;
   subtitle?: string;
   plateNumber: string;
@@ -25,20 +27,31 @@ export interface ArtVolume {
   title: string;
   subtitle: string;
   year: string;
+  coverImage: string;
   curatorNote: string;
   items: GalleryItem[];
 }
 
 // 自动从实际图片文件中提取识别真实 EXIF 信息与拍摄时间
-const [nightExif, flower1Exif, flower2Exif] = await Promise.all([
+const [
+  nightExif,
+  flower1Exif,
+  flower2Exif,
+  suzhou1Exif,
+  suzhou2Exif,
+] = await Promise.all([
   parseImageExif('covers/spings/night.jpg', 'Zhenjiang, China'),
   parseImageExif('covers/spings/flower1.jpg', 'Zhenjiang, China'),
   parseImageExif('covers/spings/flower2.jpg', 'Zhenjiang, China'),
+  parseImageExif('covers/gallery/SuZhou/suzhou1.jpg', 'Suzhou, China'),
+  parseImageExif('covers/gallery/SuZhou/suzhou2.jpg', 'Suzhou, China'),
 ]);
 
-export const galleryItems: GalleryItem[] = [
+const spingsItems: GalleryItem[] = [
   {
     id: 'spings-night',
+    volumeId: 'vol-01',
+    volumeName: '春影幽光 · 镇江春夜录',
     title: '夜色幽微',
     subtitle: '暗光微澜与春夜里的花卉呼吸',
     plateNumber: '№ 01',
@@ -55,6 +68,8 @@ export const galleryItems: GalleryItem[] = [
   },
   {
     id: 'spings-flower-1',
+    volumeId: 'vol-01',
+    volumeName: '春影幽光 · 镇江春夜录',
     title: '春野初绽 · 序',
     subtitle: '微距视角下的花簇与柔和散景',
     plateNumber: '№ 02',
@@ -71,6 +86,8 @@ export const galleryItems: GalleryItem[] = [
   },
   {
     id: 'spings-flower-2',
+    volumeId: 'vol-01',
+    volumeName: '春影幽光 · 镇江春夜录',
     title: '春野初绽 · 续',
     subtitle: '花芯脉络与枝叶间的光线流动',
     plateNumber: '№ 03',
@@ -87,15 +104,67 @@ export const galleryItems: GalleryItem[] = [
   },
 ];
 
+const suzhouItems: GalleryItem[] = [
+  {
+    id: 'suzhou-morning',
+    volumeId: 'vol-02',
+    volumeName: '姑苏纪行 · 苏州江南录',
+    title: '平江晨光',
+    subtitle: '初夏水乡的石阶粉墙与晨间光影',
+    plateNumber: '№ 01',
+    category: 'Street / Jiangnan',
+    dateLabel: suzhou1Exif.dateLabel,
+    place: suzhou1Exif.place,
+    overlayTitle: 'Pingjiang Dawn',
+    image: '/covers/gallery/SuZhou/suzhou1.jpg',
+    aspectRatio: '4/3',
+    layoutSpan: 'full',
+    readme: '清晨漫步平江路，晨光初透，水波如镜。记录下水乡石板路与粉墙黛瓦之间的静谧时光。',
+    story: '清晨漫步平江路，晨光初透，水波如镜。记录下水乡石板路与粉墙黛瓦之间的静谧时光。',
+    exif: suzhou1Exif.exif,
+  },
+  {
+    id: 'suzhou-night',
+    volumeId: 'vol-02',
+    volumeName: '姑苏纪行 · 苏州江南录',
+    title: '姑苏夜色',
+    subtitle: '晚风拂过的古街灯影与深巷余韵',
+    plateNumber: '№ 02',
+    category: 'Night / Jiangnan',
+    dateLabel: suzhou2Exif.dateLabel,
+    place: suzhou2Exif.place,
+    overlayTitle: 'Suzhou Dusk',
+    image: '/covers/gallery/SuZhou/suzhou2.jpg',
+    aspectRatio: '4/3',
+    layoutSpan: 'full',
+    readme: '暮色四合，红灯初上。老街游人渐稀，夜色里的苏州展现出温婉沉静的另一面。',
+    story: '暮色四合，红灯初上。老街游人渐稀，夜色里的苏州展现出温婉沉静的另一面。',
+    exif: suzhou2Exif.exif,
+  },
+];
+
+export const galleryItems: GalleryItem[] = [...spingsItems, ...suzhouItems];
+
 export const artVolumes: ArtVolume[] = [
   {
     volId: 'vol-01',
     volNumber: 'VOL. 01',
-    title: '春影微光 · 镇江春夜录',
+    title: '春影幽光 · 镇江春夜录',
     subtitle: 'Spring Monograph: Night Blossoms in Zhenjiang, 2024',
-    year: '2024',
-    curatorNote: '本卷画集仅收录拍摄于 2024 年 4 月春夜的 3 帧花卉切片。在暗光与微距之间，记录植物在夜色下的细腻呼吸与色彩。',
-    items: galleryItems,
+    year: '2024.04',
+    coverImage: '/covers/spings/night.jpg',
+    curatorNote: '本卷画集收录拍摄于 2024 年 4 月春夜的 3 帧花卉切片。在暗光与微距之间，记录植物在夜色下的细腻呼吸与色彩。',
+    items: spingsItems,
+  },
+  {
+    volId: 'vol-02',
+    volNumber: 'VOL. 02',
+    title: '姑苏纪行 · 苏州江南录',
+    subtitle: 'Suzhou Monograph: Jiangnan Light & Streetscapes, 2024',
+    year: '2024.05',
+    coverImage: '/covers/gallery/SuZhou/suzhou1.jpg',
+    curatorNote: '本卷画集收录 2024 年 5 月初夏的苏州光影切片。从平江路的晨光微曦到古巷夜色，记录江南水乡的建筑肌理与时光痕迹。',
+    items: suzhouItems,
   },
 ];
 
