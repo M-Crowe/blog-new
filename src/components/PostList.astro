@@ -31,13 +31,12 @@ const formatDate = (date: Date) => {
   <div class="view-switcher-row">
     <div class="view-switcher" role="tablist" aria-label="文章视图切换">
       <button class="view-tab is-active" type="button" data-view-toggle="list" role="tab" aria-selected="true">技术文章</button>
-      <button class="view-tab" type="button" data-view-toggle="gallery" role="tab" aria-selected="false">画集精选</button>
+      <button class="view-tab" type="button" data-view-toggle="gallery" role="tab" aria-selected="false">摄影画集</button>
     </div>
-    <a href="/gallery" class="view-full-gallery-link">进入完整画集展厅 →</a>
   </div>
 
-  <section class="view-panel" data-view-panel="gallery" aria-label="画集精选视图" hidden>
-    <ArtBookSpread volume={artVolumes[0]} items={galleryItems} showVolumeHeader={false} />
+  <section class="view-panel" data-view-panel="gallery" aria-label="摄影画集视图" hidden>
+    <ArtBookSpread volumes={artVolumes} showVolumeHeader={true} />
   </section>
 
   <section class="view-panel is-active" data-view-panel="list" aria-label="技术文章列表">

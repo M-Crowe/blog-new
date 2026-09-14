@@ -3,178 +3,128 @@ import type { ArtVolume, GalleryItem } from '../data/galleryItems';
 import BookLightbox from './BookLightbox.astro';
 
 interface Props {
+  volumes?: ArtVolume[];
   volume?: ArtVolume;
-  items: GalleryItem[];
+  items?: GalleryItem[];
   showVolumeHeader?: boolean;
 }
 
-const { volume, items, showVolumeHeader = true } = Astro.props;
+const { volumes, volume, items: propsItems, showVolumeHeader = true } = Astro.props;
 
-const leadItem = items[0];
-const pairItems = items.slice(1, 3);
-const featureItem = items.length > 3 ? items[3] : undefined;
-const remainingItems = items.length > 4 ? items.slice(4) : [];
+const effectiveVolumes = volumes && volumes.length > 0
+  ? volumes
+  : (volume ? [volume] : []);
+
+const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
 ---
 
 <div class="artbook-spread-wrapper">
-  {showVolumeHeader && volume && (
-    <header class="artbook-prologue">
-      <div class="prologue-spine">
-        <span class="spine-badge">{volume.volNumber}</span>
-        <span class="spine-edition">COLLECTION EDITION · {volume.year}</span>
-      </div>
-      <div class="prologue-main">
-        <h1 class="prologue-title">{volume.title}</h1>
-        <p class="prologue-subtitle">{volume.subtitle}</p>
-        <div class="prologue-note">
-          <p>{volume.curatorNote}</p>
-        </div>
-      </div>
-      <div class="prologue-meta">
-        <div class="meta-item">
-          <span class="meta-label">收录作品</span>
-          <span class="meta-value">{items.length} 帧切片</span>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label">装帧格式</span>
-          <span class="meta-value">Lookbook Monograph</span>
-        </div>
-      </div>
-    </header>
-  )}
+  {effectiveVolumes.map((vol, volIdx) => {
+    const volItems = vol.items;
+    const isTwoItems = volItems.length === 2;
+    const lead = isTwoItems ? null : volItems[0];
+    const pair = isTwoItems ? volItems : volItems.slice(1, 3);
 
-  <div class="artbook-gallery">
-    <!-- Section 1: Lead Masterpiece (卷首主幅) -->
-    {leadItem && (
-      <section class="spread-section spread-lead">
-        <div class="lead-card" data-open-artbook={leadItem.id}>
-          <div class="lead-media">
-            <img src={leadItem.image} alt={leadItem.title} class="lead-image" loading="eager" />
-            <div class="lead-overlay">
-              <div class="lead-top-badge">
-                <span class="plate-tag">{leadItem.plateNumber}</span>
-                <span class="place-tag">⌖ {leadItem.place}</span>
-              </div>
-              <div class="lead-bottom-info">
-                <span class="category-pill">{leadItem.category}</span>
-                <h2 class="lead-title">{leadItem.overlayTitle || leadItem.title}</h2>
-                <p class="lead-sub">{leadItem.subtitle}</p>
+    return (
+      <article class="volume-container" data-volume-id={vol.volId}>
+        {showVolumeHeader && (
+          <header class="artbook-prologue">
+            <div class="prologue-spine">
+              <span class="spine-badge">{vol.volNumber}</span>
+              <span class="spine-edition">COLLECTION · {vol.year}</span>
+            </div>
+            <div class="prologue-main">
+              <h2 class="prologue-title">{vol.title}</h2>
+              <p class="prologue-subtitle">{vol.subtitle}</p>
+              <div class="prologue-note">
+                <p>{vol.curatorNote}</p>
               </div>
             </div>
-            <div class="lead-hint">
-              <span>点击展卷阅读 / Open Monograph ↗</span>
-            </div>
-          </div>
-          <div class="card-caption">
-            <div class="caption-left">
-              <span class="caption-title">{leadItem.title}</span>
-              <span class="caption-date">{leadItem.dateLabel}</span>
-            </div>
-            {leadItem.exif && (
-              <div class="caption-right">
-                <span class="caption-exif">{leadItem.exif.camera} · {leadItem.exif.focalLength} · {leadItem.exif.aperture}</span>
+            <div class="prologue-meta">
+              <div class="meta-item">
+                <span class="meta-label">收录作品</span>
+                <span class="meta-value">{volItems.length} 帧切片</span>
               </div>
-            )}
-          </div>
-        </div>
-      </section>
-    )}
+              <div class="meta-item">
+                <span class="meta-label">装帧格式</span>
+                <span class="meta-value">Lookbook Monograph</span>
+              </div>
+            </div>
+          </header>
+        )}
 
-    <!-- Section 2: Diptych Spread (双联对页) -->
-    {pairItems.length > 0 && (
-      <section class="spread-section spread-diptych">
-        <div class="diptych-grid">
-          {pairItems.map((item) => (
-            <article class="diptych-card" data-open-artbook={item.id}>
-              <div class="diptych-frame">
-                <img src={item.image} alt={item.title} class="diptych-image" loading="lazy" />
-                <div class="diptych-hover-info">
-                  <span class="diptych-plate">{item.plateNumber}</span>
-                  <span class="diptych-open">展卷阅读 ↗</span>
+        <div class="artbook-gallery">
+          {lead && (
+            <section class="spread-section spread-lead">
+              <div class="lead-card" data-open-artbook={lead.id}>
+                <div class="lead-media">
+                  <img src={lead.image} alt={lead.title} class="lead-image" loading={volIdx === 0 ? 'eager' : 'lazy'} />
+                  <div class="lead-overlay">
+                    <div class="lead-top-badge">
+                      <span class="plate-tag">{lead.plateNumber}</span>
+                      <span class="place-tag">⌖ {lead.place}</span>
+                    </div>
+                    <div class="lead-bottom-info">
+                      <span class="category-pill">{lead.category}</span>
+                      <h3 class="lead-title">{lead.overlayTitle || lead.title}</h3>
+                      <p class="lead-sub">{lead.subtitle}</p>
+                    </div>
+                  </div>
+                  <div class="lead-hint">
+                    <span>点击展卷阅读 / Open Monograph ↗</span>
+                  </div>
+                </div>
+                <div class="card-caption">
+                  <div class="caption-left">
+                    <span class="caption-title">{lead.title}</span>
+                    <span class="caption-date">{lead.dateLabel}</span>
+                  </div>
+                  {lead.exif && (
+                    <div class="caption-right">
+                      <span class="caption-exif">{lead.exif.camera} · {lead.exif.focalLength} · {lead.exif.aperture}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div class="diptych-caption">
-                <div class="diptych-head">
-                  <span class="diptych-num">{item.plateNumber}</span>
-                  <span class="diptych-category">{item.category}</span>
-                </div>
-                <h3 class="diptych-title">{item.title}</h3>
-                <p class="diptych-desc">{item.subtitle}</p>
-                <div class="diptych-meta">
-                  <span>{item.place}</span>
-                  <span>{item.dateLabel}</span>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    )}
+            </section>
+          )}
 
-    <!-- Section 3: Feature Plate (宽幅物语特写) -->
-    {featureItem && (
-      <section class="spread-section spread-feature">
-        <div class="feature-card" data-open-artbook={featureItem.id}>
-          <div class="feature-aside">
-            <div class="feature-tag-row">
-              <span class="plate-tag">{featureItem.plateNumber}</span>
-              <span class="category-pill">{featureItem.category}</span>
-            </div>
-            <h2 class="feature-title">{featureItem.title}</h2>
-            <p class="feature-subtitle">{featureItem.subtitle}</p>
-            <blockquote class="feature-quote">
-              “{featureItem.story || featureItem.readme}”
-            </blockquote>
-            <div class="feature-meta-footer">
-              <div class="meta-row">
-                <span class="m-k">拍摄地点</span>
-                <span class="m-v">{featureItem.place}</span>
+          {pair.length > 0 && (
+            <section class="spread-section spread-diptych">
+              <div class="diptych-grid">
+                {pair.map((item) => (
+                  <article class="diptych-card" data-open-artbook={item.id}>
+                    <div class="diptych-frame">
+                      <img src={item.image} alt={item.title} class="diptych-image" loading="lazy" />
+                      <div class="diptych-hover-info">
+                        <span class="diptych-plate">{item.plateNumber}</span>
+                        <span class="diptych-open">展卷阅读 ↗</span>
+                      </div>
+                    </div>
+                    <div class="diptych-caption">
+                      <div class="diptych-head">
+                        <span class="diptych-num">{item.plateNumber}</span>
+                        <span class="diptych-category">{item.category}</span>
+                      </div>
+                      <h4 class="diptych-title">{item.title}</h4>
+                      <p class="diptych-desc">{item.subtitle}</p>
+                      <div class="diptych-meta">
+                        <span>{item.place}</span>
+                        <span>{item.dateLabel}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
-              <div class="meta-row">
-                <span class="m-k">快门时间</span>
-                <span class="m-v">{featureItem.dateLabel}</span>
-              </div>
-              {featureItem.exif && (
-                <div class="meta-row">
-                  <span class="m-k">摄影装备</span>
-                  <span class="m-v">{featureItem.exif.camera} ({featureItem.exif.lens})</span>
-                </div>
-              )}
-            </div>
-            <div class="feature-action-hint">
-              <span>点击展卷查看高清大图 ↗</span>
-            </div>
-          </div>
-          <div class="feature-media">
-            <img src={featureItem.image} alt={featureItem.title} class="feature-image" loading="lazy" />
-          </div>
+            </section>
+          )}
         </div>
-      </section>
-    )}
-
-    <!-- Section 4: Remaining Items (if any) -->
-    {remainingItems.length > 0 && (
-      <section class="spread-section spread-more">
-        <div class="more-grid">
-          {remainingItems.map((item) => (
-            <article class="more-card" data-open-artbook={item.id}>
-              <div class="more-frame">
-                <img src={item.image} alt={item.title} loading="lazy" />
-              </div>
-              <div class="more-info">
-                <span class="more-plate">{item.plateNumber}</span>
-                <h4 class="more-title">{item.title}</h4>
-                <span class="more-place">{item.place}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    )}
-  </div>
+      </article>
+    );
+  })}
 
   <!-- Fullscreen Book Lightbox -->
-  <BookLightbox items={items} />
+  <BookLightbox items={allItems} />
 </div>
 
 <style>

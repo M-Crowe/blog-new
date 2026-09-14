@@ -15,7 +15,7 @@ const { items } = Astro.props;
     <header class="lightbox-header">
       <div class="lightbox-brand">
         <span class="lightbox-logo-dot"></span>
-        <span class="lightbox-vol-title">春影幽光 · 摄影画集</span>
+        <span class="lightbox-vol-title" data-lightbox-vol-title>春影幽光 · 摄影画集</span>
         <span class="lightbox-divider">/</span>
         <span class="lightbox-counter" data-lightbox-counter>01 / {items.length.toString().padStart(2, '0')}</span>
       </div>
@@ -125,6 +125,7 @@ const { items } = Astro.props;
     let currentIndex = 0;
 
     const imgEl = document.getElementById('lightbox-image');
+    const volTitleEl = lightbox.querySelector('[data-lightbox-vol-title]');
     const counterEl = lightbox.querySelector('[data-lightbox-counter]');
     const plateEl = lightbox.querySelector('[data-folio-plate]');
     const categoryEl = lightbox.querySelector('[data-folio-category]');
@@ -150,6 +151,9 @@ const { items } = Astro.props;
       if (imgEl) {
         imgEl.src = item.image;
         imgEl.alt = item.title;
+      }
+      if (volTitleEl) {
+        volTitleEl.textContent = item.volumeName || '摄影画集';
       }
       if (counterEl) {
         counterEl.textContent = `${(index + 1).toString().padStart(2, '0')} / ${items.length.toString().padStart(2, '0')}`;
