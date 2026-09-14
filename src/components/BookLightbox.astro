@@ -118,8 +118,10 @@ const { items } = Astro.props;
 </div>
 
 <script define:vars={{ items }}>
-  const lightbox = document.getElementById('artbook-lightbox');
-  if (lightbox) {
+  const initLightbox = () => {
+    const lightbox = document.getElementById('artbook-lightbox');
+    if (!lightbox) return;
+
     let currentIndex = 0;
 
     const imgEl = document.getElementById('lightbox-image');
@@ -184,9 +186,9 @@ const { items } = Astro.props;
       renderItem(index);
       lightbox.removeAttribute('hidden');
       document.body.style.overflow = 'hidden';
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         lightbox.classList.add('is-open');
-      }, 10);
+      });
     };
 
     const closeLightbox = () => {
@@ -217,7 +219,7 @@ const { items } = Astro.props;
 
     // Keyboard support
     window.addEventListener('keydown', (e) => {
-      if (lightbox.hasAttribute('hidden')) return;
+      if (lightbox.hasAttribute('hidden') || !lightbox.classList.contains('is-open')) return;
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowRight') nextItem();
       if (e.key === 'ArrowLeft') prevItem();
@@ -232,21 +234,26 @@ const { items } = Astro.props;
         openLightbox(found >= 0 ? found : 0);
       }
     };
+  };
 
-    // Auto-bind click on elements with data-open-artbook
-    const bindTriggers = () => {
-      document.querySelectorAll('[data-open-artbook]').forEach((el) => {
-        el.addEventListener('click', (e) => {
-          e.preventDefault();
-          const targetId = el.getAttribute('data-open-artbook');
-          window.openArtBookLightbox(targetId);
-        });
-      });
-    };
+  // Delegated click handler for opening lightbox
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-open-artbook]');
+    if (trigger) {
+      e.preventDefault();
+      const targetId = trigger.getAttribute('data-open-artbook');
+      if (window.openArtBookLightbox) {
+        window.openArtBookLightbox(targetId);
+      }
+    }
+  });
 
-    bindTriggers();
-    document.addEventListener('astro:page-load', bindTriggers);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLightbox);
+  } else {
+    initLightbox();
   }
+  document.addEventListener('astro:page-load', initLightbox);
 </script>
 
 <style>
@@ -258,11 +265,17 @@ const { items } = Astro.props;
     align-items: center;
     justify-content: center;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .artbook-lightbox[hidden] {
+    display: none !important;
   }
 
   .artbook-lightbox.is-open {
     opacity: 1;
+    pointer-events: auto;
   }
 
   .lightbox-backdrop {
