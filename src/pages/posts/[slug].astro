@@ -60,6 +60,7 @@ const formatDate = (date: Date) => {
         background-color: var(--bg-color);
         color: var(--text-main);
         line-height: 1.8;
+        overflow-x: hidden;
       }
 
       .container {
@@ -213,6 +214,23 @@ const formatDate = (date: Date) => {
       }
 
       /* Table of Contents */
+      .toc-aside {
+        position: sticky;
+        top: 24px;
+      }
+      
+      .toc-overlay {
+        display: none;
+      }
+      
+      .toc-header {
+        display: none; /* Only show on mobile */
+      }
+      
+      .mobile-toc-toggle {
+        display: none;
+      }
+
       .toc-section {
         margin-top: 32px;
         padding-top: 24px;
@@ -319,6 +337,14 @@ const formatDate = (date: Date) => {
         line-height: 1.86;
         color: #2f3640;
         max-width: 68ch;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+      }
+
+      :global(article p), :global(article h2), :global(article h3) {
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
 
       .ai-notice {
@@ -521,26 +547,129 @@ const formatDate = (date: Date) => {
         .content-grid {
           grid-template-columns: 220px minmax(0, 1fr);
         }
+        
         .toc-aside {
-          display: none;
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 100%;
+          height: 100vh;
+          z-index: 2000;
+          pointer-events: none; /* Let clicks pass through when hidden */
+        }
+        
+        .toc-overlay {
+          display: block;
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.4);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .toc-drawer {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 280px;
+          height: 100%;
+          background: var(--bg-color);
+          box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+          transform: translateX(100%);
+          transition: transform 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          pointer-events: auto; /* Catch clicks on the drawer */
+        }
+        
+        .toc-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 24px 20px 16px;
+          border-bottom: 1px solid var(--line);
+        }
+        
+        .toc-header .toc-label {
+          margin-bottom: 0;
+        }
+
+        .toc-close {
+          background: none;
+          border: none;
+          font-size: 20px;
+          color: var(--text-muted);
+          cursor: pointer;
+        }
+        
+        .toc-section {
+          margin-top: 0;
+          padding: 20px;
+          overflow-y: auto;
+          flex: 1;
+        }
+        
+        .mobile-toc-toggle {
+          display: flex;
+          position: fixed;
+          bottom: 40px;
+          right: 100px; /* To the left of back-to-top */
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: var(--bg-color);
+          border: 1px solid var(--line);
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 18px;
+          z-index: 999;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          transition: background 0.2s ease;
+        }
+        
+        .mobile-toc-toggle:hover {
+          background: rgba(0, 0, 0, 0.04);
+        }
+
+        /* Active states for JS */
+        .toc-aside.is-open {
+          pointer-events: auto;
+        }
+        .toc-aside.is-open .toc-overlay {
+          opacity: 1;
+        }
+        .toc-aside.is-open .toc-drawer {
+          transform: translateX(0);
         }
       }
 
       @media (max-width: 600px) {
+        html {
+          font-size: 14.5px;
+        }
+
         .container {
-          padding: 40px 16px;
+          padding: 24px 14px;
+          width: 100%;
+          max-width: 100%;
+          overflow-x: hidden;
         }
 
         .post-banner {
           margin-bottom: 22px;
+          height: clamp(120px, 16vw, 200px);
         }
 
         h1 {
-          font-size: 24px;
+          font-size: 22px;
+          word-break: break-word;
         }
 
         .content-grid {
-          grid-template-columns: 1fr;
+          display: grid;
+          grid-template-columns: minmax(0, 100%);
+          width: 100%;
           gap: 18px;
         }
 
@@ -555,6 +684,12 @@ const formatDate = (date: Date) => {
           gap: 8px 14px;
         }
 
+        :global(article) {
+          max-width: 100%;
+          width: 100%;
+          overflow-x: hidden;
+        }
+
         :global(article h2) {
           font-size: 20px;
         }
@@ -567,8 +702,12 @@ const formatDate = (date: Date) => {
           font-size: 16px;
         }
 
-        .toc-section {
-          display: none;
+        .mobile-toc-toggle {
+          bottom: 20px;
+          right: 68px; /* Move next to back-to-top on small screens */
+          width: 36px;
+          height: 36px;
+          font-size: 16px;
         }
       }
     </style>
@@ -638,15 +777,22 @@ const formatDate = (date: Date) => {
           </footer>
         </article>
 
-        <aside class="toc-aside">
-          <div class="toc-section" id="toc-container">
-            <span class="toc-label">目录</span>
-            <ul class="toc-list" id="toc-list"></ul>
+        <aside class="toc-aside" id="toc-aside">
+          <div class="toc-overlay" id="toc-overlay"></div>
+          <div class="toc-drawer" id="toc-drawer">
+            <div class="toc-header">
+              <span class="toc-label">目录</span>
+              <button class="toc-close" id="toc-close" title="关闭目录">✕</button>
+            </div>
+            <div class="toc-section" id="toc-container">
+              <ul class="toc-list" id="toc-list"></ul>
+            </div>
           </div>
         </aside>
       </div>
     </div>
 
+    <button class="mobile-toc-toggle" id="mobile-toc-toggle" title="展开目录">☰</button>
     <button class="back-to-top" id="back-to-top" title="回到顶部">↑</button>
 
     <script>
@@ -660,22 +806,43 @@ const formatDate = (date: Date) => {
           return;
         }
 
-        if (element.closest('pre, code')) {
+        if (element.closest('pre, code, .ai-notice')) {
           return;
         }
-
-        const text = element.textContent?.trim();
+        
+        // Guard against double rendering or losing original text
+        if (!element.dataset.originalText) {
+          element.dataset.originalText = element.textContent?.trim() || '';
+        }
+        
+        const text = element.dataset.originalText;
         if (!text) {
           return;
         }
+
+        // Get absolute max width constrained by article
+        const article = element.closest('article');
+        let containerWidth;
+        if (article) {
+           const articleWidth = article.clientWidth;
+           const articleStyle = window.getComputedStyle(article);
+           containerWidth = articleWidth - parseFloat(articleStyle.paddingLeft || '0') - parseFloat(articleStyle.paddingRight || '0');
+        } else {
+           containerWidth = element.clientWidth;
+        }
+
+        // Safety margin of 2 pixels to forbid exact-equal math overflow in CSS layout
+        const drawWidth = Math.max(1, containerWidth - 2);
 
         const styles = window.getComputedStyle(element);
         const fontSize = Number.parseFloat(styles.fontSize);
         const lineHeightValue = Number.parseFloat(styles.lineHeight);
         const lineHeight = Number.isNaN(lineHeightValue) ? fontSize * 1.86 : lineHeightValue;
-        const font = `${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
-        const width = Math.max(1, element.clientWidth);
-        const drawWidth = Math.max(1, width - 16);
+        
+        // Safely declare font to Canvas explicitly bypassing "BlinkMacSystemFont" unquoted crash
+        const fontWeight = styles.fontWeight || '400';
+        const fontStyle = styles.fontStyle || 'normal';
+        const font = `${fontStyle} ${fontWeight} ${fontSize}px system-ui, -apple-system, sans-serif`;
 
         const prepared = prepareWithSegments(text, font);
         const { lines } = layoutWithLines(prepared, drawWidth, lineHeight);
@@ -687,8 +854,10 @@ const formatDate = (date: Date) => {
         lines.forEach((line) => {
           const span = document.createElement('span');
           span.textContent = line.text;
-          span.style.display = 'block';
+          span.style.display = 'inline-block'; // Changed to inline-block to restrict bounding box to text width, enabling correct mouse gravity center calculation
+          span.style.width = '100%';
           span.style.lineHeight = `${lineHeight}px`;
+          span.style.whiteSpace = 'nowrap'; // Enforce the engine layout logic, forbid real DOM to wrap
           span.style.transform = 'translate3d(0, 0, 0)';
           span.style.willChange = 'transform';
           element.appendChild(span);
@@ -700,12 +869,13 @@ const formatDate = (date: Date) => {
 
       const renderArticleWithPretext = () => {
         const article = document.querySelector('article');
-        if (!article) return;
+        if (!article) return [];
 
         const result = [];
-        // 处理段落和标题，不处理列表项和AI提示
         article.querySelectorAll(':is(p, h2, h3)').forEach((el) => {
-          if (el.closest('pre, code, .ai-notice')) return;
+          // ensure TOC links stay valid by keeping the id!
+          // We don't overwrite id, only innerHTML. Wait, generateTOC adds IDs to headings!
+          // If generateTOC was called before this, the tag already has an ID.
           const rendered = renderTextBlockWithPretext(el);
           if (rendered) {
             result.push({
@@ -717,36 +887,24 @@ const formatDate = (date: Date) => {
           }
         });
 
-        // 对列表项直接应用吸附（不重排版）
         article.querySelectorAll('li').forEach((el) => {
-          result.push({
-            element: el,
-            lines: [],
-            spans: [el],
-            lineHeight: 0,
-          });
+          result.push({ element: el, lines: [], spans: [el], lineHeight: 0 });
         });
 
         return result;
       };
 
-      const setupMouseAttraction = () => {
-        if (!enableMouseAttraction) {
-          return;
-        }
+      let currentRafId = 0;
+      let isSelecting = false;
 
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          return;
-        }
+      const setupMouseAttraction = (blocks) => {
+        if (!enableMouseAttraction) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (!blocks || !blocks.length) return;
 
-        const article = document.querySelector('article');
-        if (!article) {
-          return;
-        }
-
-        const blocks = renderArticleWithPretext();
-        if (!blocks.length) {
-          return;
+        // Clean up previous instance and orb if resizing or re-rendering
+        if (window.cleanupMouseAttraction) {
+          window.cleanupMouseAttraction();
         }
 
         const orbEl = document.createElement('div');
@@ -763,27 +921,12 @@ const formatDate = (date: Date) => {
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
         const models = blocks.flatMap((block) => {
-          // 如果是列表项，直接返回一个模型（元素本身）
           if (block.lines.length === 0 && block.spans.length === 1) {
-            return [{
-              span: block.spans[0],
-              line: null,
-              isListItem: true,
-              offsetX: 0,
-              offsetY: 0,
-            }];
+            return [{ span: block.spans[0], line: null, isListItem: true, offsetX: 0, offsetY: 0 }];
           }
-          // 否则返回每一行的 span 模型
-          return block.spans.map((span, idx) => ({
-            span,
-            line: block.lines[idx],
-            isListItem: false,
-            offsetX: 0,
-            offsetY: 0,
-          }));
+          return block.spans.map((span, idx) => ({ span, line: block.lines[idx], isListItem: false, offsetX: 0, offsetY: 0 }));
         });
 
-        let rafId = 0;
         const tick = () => {
           orb.x += (orb.tx - orb.x) * 0.2;
           orb.y += (orb.ty - orb.y) * 0.2;
@@ -791,10 +934,11 @@ const formatDate = (date: Date) => {
           orbEl.style.top = `${orb.y}px`;
 
           models.forEach((model) => {
+            if (!model.span.isConnected) return; // Safegaurd against detached DOM nodes
+            
             const spanRect = model.span.getBoundingClientRect();
             const cx = spanRect.left + spanRect.width / 2;
             const cy = spanRect.top + spanRect.height / 2;
-
             const dx = orb.x - cx;
             const dy = orb.y - cy;
             const distance = Math.hypot(dx, dy);
@@ -805,107 +949,100 @@ const formatDate = (date: Date) => {
 
             model.offsetX += (targetX - model.offsetX) * 0.2;
             model.offsetY += (targetY - model.offsetY) * 0.2;
-
-            // 应用 transform
-            if (model.isListItem) {
-              // 列表项作为整体移动
-              model.span.style.transform = `translate(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px)`;
-            } else {
-              // span 应用 transform
-              model.span.style.transform = `translate(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px)`;
-            }
+            model.span.style.transform = `translate3d(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px, 0)`;
           });
 
-          rafId = requestAnimationFrame(tick);
+          currentRafId = requestAnimationFrame(tick);
         };
 
-        const onMove = (e) => {
-          orb.tx = e.clientX;
-          orb.ty = e.clientY;
-        };
-
-        const onLeave = () => {
-          orb.tx = window.innerWidth * 0.5;
-          orb.ty = window.innerHeight * 0.45;
-        };
-
-        let isSelecting = false;
+        const onMove = (e) => { orb.tx = e.clientX; orb.ty = e.clientY; };
+        const onLeave = () => { orb.tx = window.innerWidth * 0.5; orb.ty = window.innerHeight * 0.45; };
+        
         const onMouseDown = () => {
           isSelecting = true;
-          models.forEach((m) => {
-            m.offsetX *= 0.8;
-            m.offsetY *= 0.8;
-          });
+          models.forEach(m => { m.offsetX *= 0.8; m.offsetY *= 0.8; });
         };
-        const onMouseUp = () => {
-          isSelecting = false;
-        };
+        const onMouseUp = () => { isSelecting = false; };
 
-        rafId = requestAnimationFrame(tick);
+        currentRafId = requestAnimationFrame(tick);
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseleave', onLeave);
         window.addEventListener('blur', onLeave);
         document.addEventListener('mousedown', onMouseDown);
         document.addEventListener('mouseup', onMouseUp);
 
-        window.addEventListener('beforeunload', () => {
-          cancelAnimationFrame(rafId);
-        });
+        // Store cleanup function globally to properly destroy and recreate when layout resizes
+        window.cleanupMouseAttraction = () => {
+          cancelAnimationFrame(currentRafId);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseleave', onLeave);
+          window.removeEventListener('blur', onLeave);
+          document.removeEventListener('mousedown', onMouseDown);
+          document.removeEventListener('mouseup', onMouseUp);
+          if (orbEl.isConnected) orbEl.remove();
+        };
+
+        window.addEventListener('beforeunload', window.cleanupMouseAttraction);
       };
 
-      // Generate Table of Contents
       const generateTOC = () => {
         const article = document.querySelector('article');
         if (!article) return;
-
         const headings = article.querySelectorAll('h2, h3');
         const tocList = document.getElementById('toc-list');
         if (!tocList) return;
-
+        
+        // Make sure it doesn't duplicate if called multiple times implicitly
+        tocList.innerHTML = '';
+        
         headings.forEach((heading, index) => {
-          if (!heading.id) {
-            heading.id = `heading-${index}`;
-          }
-
+          if (!heading.id) heading.id = `heading-${index}`;
           const li = document.createElement('li');
           li.className = heading.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
-
           const a = document.createElement('a');
           a.href = `#${heading.id}`;
-          a.textContent = heading.textContent;
-
+          
+          // Use originalText if pretext was already rendered and replaced textContent
+          a.textContent = heading.dataset.originalText || heading.textContent;
           li.appendChild(a);
           tocList.appendChild(li);
         });
       };
 
-      const setupCodeCopyButtons = () => {
-        const preBlocks = document.querySelectorAll('article pre');
-        preBlocks.forEach((pre) => {
-          const button = document.createElement('button');
-          button.className = 'code-copy-btn';
-          button.textContent = '复制';
-
-          pre.appendChild(button);
-
-          button.addEventListener('click', async () => {
-            const code = pre.querySelector('code');
-            if (!code) return;
-
-            try {
-              await navigator.clipboard.writeText(code.textContent || '');
-              button.textContent = '已复制!';
-              setTimeout(() => {
-                button.textContent = '复制';
-              }, 2000);
-            } catch (err) {
-              console.error('Failed to copy: ', err);
-            }
-          });
-        });
+      const initSystem = () => {
+        // FIRST: Generate TOC before inner content is sliced into spans by pretext, but fallback is supported just in case! Moreso we generate TOC first.
+        generateTOC();
+        
+        const blocks = renderArticleWithPretext();
+        setupMouseAttraction(blocks);
       };
 
-      // Back to Top functionality
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSystem);
+      } else {
+        initSystem();
+      }
+
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          // Reset text nodes and flush flags to allow correct native reflow width measurements
+          document.querySelectorAll('article p, article h2, article h3').forEach((el) => {
+            if (el.dataset.originalText) {
+              el.dataset.pretextRendered = 'false';
+              el.textContent = el.dataset.originalText;
+            }
+          });
+          
+          // Wait 1 frame so DOM can actually paint the restored widths and wrap naturally before we lock it into strict drawing shapes via Pretext
+          requestAnimationFrame(() => {
+            const blocks = renderArticleWithPretext();
+            // Don't setupMouseAttraction again since it skips if orb exists
+          });
+        }, 300);
+      });
+
       const backToTopBtn = document.getElementById('back-to-top');
 
       if (backToTopBtn) {
@@ -925,15 +1062,45 @@ const formatDate = (date: Date) => {
         });
       }
 
-      // Initialize TOC
-      generateTOC();
-      setupCodeCopyButtons();
+      // Mobile TOC Drawer JS
+      const setupMobileTOC = () => {
+        const toggleBtn = document.getElementById('mobile-toc-toggle');
+        const closeBtn = document.getElementById('toc-close');
+        const overlay = document.getElementById('toc-overlay');
+        const aside = document.getElementById('toc-aside');
+        const tocList = document.getElementById('toc-list');
+        
+        if (!toggleBtn || !aside) return;
 
+        const openTOC = () => {
+          aside.classList.add('is-open');
+          document.body.style.overflow = 'hidden';
+        };
+
+        const closeTOC = () => {
+          aside.classList.remove('is-open');
+          document.body.style.overflow = '';
+        };
+
+        toggleBtn.addEventListener('click', openTOC);
+        if(closeBtn) closeBtn.addEventListener('click', closeTOC);
+        if(overlay) overlay.addEventListener('click', closeTOC);
+
+        // delegate event since TOC links are generated dynamically
+        if(tocList) {
+          tocList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A') {
+              closeTOC();
+            }
+          });
+        }
+      };
+      
       if (document.readyState === 'loading') {
-
-        document.addEventListener('DOMContentLoaded', setupMouseAttraction);
+        document.addEventListener('DOMContentLoaded', setupMobileTOC);
       } else {
-        setupMouseAttraction();
+        // give it a tiny delay to ensure TOC links generation finishes first
+        setTimeout(setupMobileTOC, 50);
       }
     </script>
   </body>
