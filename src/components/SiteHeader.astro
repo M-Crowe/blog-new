@@ -1,0 +1,90 @@
+---
+import { siteConfig } from '../lib/config';
+
+interface Props {
+  currentPath?: string;
+}
+
+const { currentPath = Astro.url.pathname } = Astro.props;
+
+// 规范化路径匹配逻辑
+const normalizePath = (path: string) => path.replace(/\/$/, '') || '/';
+const currentNorm = normalizePath(currentPath);
+
+const isActive = (href: string) => {
+  const normHref = normalizePath(href);
+  if (normHref === '/') {
+    return currentNorm === '/';
+  }
+  return currentNorm === normHref || currentNorm.startsWith(normHref + '/');
+};
+---
+
+<header class="site-header">
+  <div class="site-brand">
+    <a href="/">{siteConfig.site.name}</a>
+  </div>
+  <nav class="site-nav">
+    {siteConfig.nav.map((item) => (
+      <a
+        href={item.href}
+        class:list={[{ active: isActive(item.href) }]}
+      >
+        {item.label}
+      </a>
+    ))}
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px 0;
+    border-bottom: 1px solid #EEEEEE;
+    line-height: 1.5;
+    box-sizing: border-box;
+  }
+
+  .site-brand {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.5;
+  }
+
+  .site-brand a {
+    color: #2C2C2C;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .site-brand a:hover {
+    opacity: 0.8;
+  }
+
+  .site-nav {
+    display: flex;
+    gap: 24px;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    line-height: 1.5;
+    color: #888888;
+  }
+
+  .site-nav a {
+    color: #888888;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .site-nav a:hover {
+    color: #2C2C2C;
+  }
+
+  .site-nav a.active {
+    color: #2C2C2C;
+    font-weight: 600;
+  }
+</style>

@@ -13,10 +13,10 @@ interface Post {
 
 interface Props {
   posts: Post[];
-  galleryItems: GalleryItem[];
+  galleryItems?: GalleryItem[];
 }
 
-const { posts, galleryItems } = Astro.props;
+const { posts } = Astro.props;
 
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('zh-CN', {

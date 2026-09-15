@@ -1,21 +1,28 @@
-/* 全局隐藏所有滚动条，同时完整保留鼠标滚轮与手势滑动功能 */
+@import "tailwindcss";
+@import "@fontsource/monaspace-krypton/400.css";
+@import "@fontsource/monaspace-krypton/500.css";
+@import "@fontsource/monaspace-krypton/600.css";
+@import "@fontsource/monaspace-krypton/700.css";
+
+:root {
+  --font-mono: 'Monaspace Krypton', ui-monospace, SFMono-Regular, "Cascadia Code", "Fira Code", Menlo, Monaco, Consolas, monospace;
+}
+
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+/* 全局隐藏页面默认滚动条，同时完整保留鼠标滚轮与手势滑动功能 */
 html,
-body,
-* {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE / Edge */
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-::-webkit-scrollbar {
-  display: none !important; /* Chrome, Safari, Opera, Edge (Chromium) */
-  width: 0 !important;
-  height: 0 !important;
-}
-
-::-webkit-scrollbar-thumb {
-  display: none !important;
-}
-
-::-webkit-scrollbar-track {
-  display: none !important;
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
