@@ -11,16 +11,13 @@ import '../../styles/global.css';
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>画集 · ArtBook Monograph | {siteConfig.site.name}</title>
+    <title>画廊 · Gallery | {siteConfig.site.name}</title>
     <style>
       :root {
-        --bg-color: #FAFAFB;
-        --text-main: #2C2C2C;
-        --text-muted: #888888;
-        --border-color: #EEEEEE;
-        --radius: 12px;
-        --type-nav-size: 0.95rem;
-        --type-nav-spacing: 0;
+        --bg-dark: #090a0d;
+        --text-dark: #f0f0f4;
+        --text-muted: #8e94a0;
+        --border-dark: rgba(255, 255, 255, 0.1);
       }
 
       * {
@@ -30,14 +27,17 @@ import '../../styles/global.css';
       }
 
       html {
-        background: var(--bg-color);
+        background: var(--bg-dark);
+        color: var(--text-dark);
         -webkit-font-smoothing: antialiased;
       }
 
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-        color: var(--text-main);
+        background: var(--bg-dark);
+        color: var(--text-dark);
         line-height: 1.6;
+        min-height: 100vh;
       }
 
       a {
@@ -45,66 +45,27 @@ import '../../styles/global.css';
         text-decoration: none;
       }
 
-      .blog-container {
-        max-width: 1360px;
+      .gallery-viewport {
+        max-width: 1440px;
         margin: 0 auto;
-        padding: 0 32px;
+        padding: 0 28px 80px;
       }
 
-      /* Page Banner */
-      .gallery-page-header {
-        margin: 48px 0 40px;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        flex-wrap: wrap;
-        gap: 16px;
-      }
-
-      .header-title-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .page-tag {
-        font-size: 0.78rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: #ff5e3a;
-        font-weight: 600;
-      }
-
-      .page-main-title {
-        font-size: 2.4rem;
-        font-weight: 600;
-        letter-spacing: -0.03em;
-        color: #111;
-        margin: 0;
-      }
-
-      .header-desc {
-        max-width: 480px;
-        font-size: 0.95rem;
-        color: var(--text-muted);
-        line-height: 1.6;
-      }
-
-      /* Gallery Content Container */
+      /* Gallery Main Area */
       .gallery-main {
-        margin-bottom: 100px;
+        margin-top: 16px;
+        margin-bottom: 60px;
       }
 
       /* Footer */
       .site-footer {
         margin-top: 60px;
         padding-top: 30px;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--border-dark);
         text-align: center;
         color: var(--text-muted);
         font-size: 0.85rem;
         line-height: 1.8;
-        padding-bottom: 60px;
       }
 
       .footer-links {
@@ -121,7 +82,7 @@ import '../../styles/global.css';
       }
 
       .footer-links a:hover {
-        color: var(--text-main);
+        color: #ffffff;
       }
 
       .footer-desc {
@@ -130,34 +91,20 @@ import '../../styles/global.css';
       }
 
       @media (max-width: 768px) {
-        .blog-container {
-          padding: 0 20px;
-        }
-        .page-main-title {
-          font-size: 1.8rem;
+        .gallery-viewport {
+          padding: 0 16px 60px;
         }
       }
     </style>
   </head>
-  <body>
-    <div class="blog-container">
-      <!-- 博客统一导航栏 -->
+  <body class="dark-gallery">
+    <div class="gallery-viewport">
+      <!-- 统一站点导航 -->
       <SiteHeader />
 
-      <!-- 画集头 -->
-      <section class="gallery-page-header">
-        <div class="header-title-group">
-          <span class="page-tag">ARTBOOK & EXHIBITION</span>
-          <h1 class="page-main-title">个人影集与视觉志</h1>
-        </div>
-        <p class="header-desc">
-          探索光线在镜头与纸张之间的驻留。点击任意画幅即可进入全屏沉浸展卷模式，查看作品随笔手记与技术参数。
-        </p>
-      </section>
-
-      <!-- 画集主体展区 -->
+      <!-- 画廊主体（5列平铺无缝照片墙 + 顶栏 + 展开器） -->
       <main class="gallery-main">
-        <ArtBookSpread volumes={artVolumes} showVolumeHeader={true} />
+        <ArtBookSpread volumes={artVolumes} showVolumeHeader={true} theme="dark" />
       </main>
 
       <!-- Footer -->
@@ -167,6 +114,7 @@ import '../../styles/global.css';
             GitHub
           </a>
           <a href={`mailto:${siteConfig.author.email}`}>Email</a>
+          <a href="/">返回博客</a>
         </div>
         <p class="footer-desc">
           {siteConfig.footer.copyright}<br/>
