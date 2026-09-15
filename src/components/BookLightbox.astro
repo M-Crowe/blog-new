@@ -117,7 +117,8 @@ const { items } = Astro.props;
   </div>
 </div>
 
-<script define:vars={{ items }}>
+<script is:inline define:vars={{ items }}>
+  // @ts-nocheck
   const initLightbox = () => {
     const lightbox = document.getElementById('artbook-lightbox');
     if (!lightbox) return;

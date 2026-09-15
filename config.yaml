@@ -1,0 +1,35 @@
+# 博客站点全局配置文件 (Site Configuration)
+
+# 站点基础信息
+site:
+  name: "Marinus's Blog"
+  title: "Marinus's Blog"
+  description: "记录技术、设计与审美的交叉点。分享前端工程化、排版与生活日常。"
+  url: "https://marinus-blog.pages.dev"
+  slogan: |
+    记录技术、设计与审美的交叉点。
+    分享前端工程化、排版与生活日常。
+
+# 博主与社交信息
+author:
+  name: "Marinus"
+  bio: "记录代码留下的痕迹，思考设计在工程中的边界。"
+  avatar: "/avatar.jpg"
+  email: "marinusCr@outlook.com"
+  github: "https://github.com/M-Crowe"
+
+# 导航菜单配置
+nav:
+  - label: "首页"
+    href: "/"
+  - label: "画集"
+    href: "/gallery"
+  - label: "归档"
+    href: "/archive"
+  - label: "关于"
+    href: "/about"
+
+# 页脚配置
+footer:
+  copyright: "© 2026 Marinus's Blog. Built with Astro & Pretext."
+  desc: "记录技术、设计与生活的美好时刻。"
