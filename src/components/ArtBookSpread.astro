@@ -138,7 +138,7 @@ const getVolumeRows = (items: GalleryItem[]): GalleryItem[][] => {
       ))}
     </div>
 
-    <BookLightbox items={allItems} />
+    <BookLightbox items={allItems} theme="dark" />
   </div>
 ) : (
   <div class="album-feed-wrapper">
@@ -186,7 +186,7 @@ const getVolumeRows = (items: GalleryItem[]): GalleryItem[][] => {
       );
     })}
 
-    <BookLightbox items={allItems} />
+    <BookLightbox items={allItems} theme="light" />
   </div>
 )}
 

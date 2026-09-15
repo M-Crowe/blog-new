@@ -3,12 +3,13 @@ import type { GalleryItem } from '../data/galleryItems';
 
 interface Props {
   items: GalleryItem[];
+  theme?: 'light' | 'dark' | 'auto';
 }
 
-const { items } = Astro.props;
+const { items, theme = 'auto' } = Astro.props;
 ---
 
-<div id="artbook-lightbox" class="artbook-lightbox" role="dialog" aria-modal="true" aria-label="画集展卷阅读器" hidden>
+<div id="artbook-lightbox" class:list={["artbook-lightbox", `theme-${theme}`]} role="dialog" aria-modal="true" aria-label="画集展卷阅读器" hidden>
   <div class="lightbox-backdrop" data-lightbox-close></div>
 
   <div class="lightbox-container">
@@ -250,7 +251,67 @@ const { items } = Astro.props;
 </script>
 
 <style>
+  /* 基础默认主题：清雅亮白模式（适配首页及浅色页面） */
   .artbook-lightbox {
+    --lb-backdrop-bg: rgba(245, 245, 247, 0.85);
+    --lb-container-bg: #ffffff;
+    --lb-container-border: #e5e7eb;
+    --lb-container-shadow: 0 24px 60px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.03);
+    
+    --lb-header-bg: #fafafb;
+    --lb-header-border: #eeeeee;
+    --lb-brand-text: #2C2C2C;
+    --lb-dot-bg: #2C2C2C;
+    --lb-dot-shadow: none;
+    --lb-divider-color: #cccccc;
+    --lb-counter-color: #666666;
+    
+    --lb-close-bg: #ffffff;
+    --lb-close-border: #e0e0e0;
+    --lb-close-text: #2C2C2C;
+    --lb-close-hover-bg: #f0f0f0;
+    --lb-close-hover-border: #d0d0d0;
+    --lb-close-hover-text: #111111;
+    --lb-close-tip: #888888;
+    
+    --lb-stage-bg: #f7f7f9;
+    --lb-stage-border: #eeeeee;
+    --lb-img-shadow: 0 10px 30px rgba(0, 0, 0, 0.09);
+    
+    --lb-arrow-bg: rgba(255, 255, 255, 0.95);
+    --lb-arrow-border: #e0e0e0;
+    --lb-arrow-text: #2C2C2C;
+    --lb-arrow-hover-bg: #ffffff;
+    --lb-arrow-hover-border: #bbb;
+    --lb-arrow-hover-text: #111111;
+    --lb-arrow-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    
+    --lb-folio-bg: #ffffff;
+    --lb-folio-text: #2C2C2C;
+    --lb-plate-bg: #f0f0f2;
+    --lb-plate-border: transparent;
+    --lb-plate-text: #111111;
+    --lb-category-text: #888888;
+    --lb-title-text: #1a1a1a;
+    --lb-subtitle-text: #666666;
+    
+    --lb-metatag-bg: #f5f5f7;
+    --lb-metatag-border: #e8e8ec;
+    --lb-metatag-text: #555555;
+    
+    --lb-divider-bg: #eeeeee;
+    --lb-story-heading: #888888;
+    --lb-story-bg: #fafafb;
+    --lb-story-border: #f0f0f2;
+    --lb-story-border-left: #2C2C2C;
+    --lb-story-text: #374151;
+    
+    --lb-exif-bg: #fafafb;
+    --lb-exif-border: #eeeeee;
+    --lb-exif-header: #666666;
+    --lb-exif-label: #999999;
+    --lb-exif-val: #222222;
+
     position: fixed;
     inset: 0;
     z-index: 9999;
@@ -260,6 +321,69 @@ const { items } = Astro.props;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* 暗黑主题模式：显式声明 .theme-dark 或在画廊展厅 .dark-gallery 环境下生效 */
+  .artbook-lightbox.theme-dark,
+  :global(body.dark-gallery) .artbook-lightbox:not(.theme-light) {
+    --lb-backdrop-bg: rgba(0, 0, 0, 0.88);
+    --lb-container-bg: #10121a;
+    --lb-container-border: rgba(255, 255, 255, 0.1);
+    --lb-container-shadow: 0 28px 70px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    
+    --lb-header-bg: #141722;
+    --lb-header-border: rgba(255, 255, 255, 0.08);
+    --lb-brand-text: #e5e9f0;
+    --lb-dot-bg: #88c0d0;
+    --lb-dot-shadow: 0 0 8px rgba(136, 192, 208, 0.6);
+    --lb-divider-color: rgba(255, 255, 255, 0.2);
+    --lb-counter-color: #81a1c1;
+    
+    --lb-close-bg: rgba(255, 255, 255, 0.08);
+    --lb-close-border: rgba(255, 255, 255, 0.14);
+    --lb-close-text: #eceff4;
+    --lb-close-hover-bg: rgba(255, 255, 255, 0.16);
+    --lb-close-hover-border: rgba(255, 255, 255, 0.28);
+    --lb-close-hover-text: #ffffff;
+    --lb-close-tip: #8892b0;
+    
+    --lb-stage-bg: #07080c;
+    --lb-stage-border: rgba(255, 255, 255, 0.08);
+    --lb-img-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    
+    --lb-arrow-bg: rgba(18, 22, 32, 0.85);
+    --lb-arrow-border: rgba(255, 255, 255, 0.15);
+    --lb-arrow-text: #e5e9f0;
+    --lb-arrow-hover-bg: rgba(30, 36, 52, 0.95);
+    --lb-arrow-hover-border: rgba(255, 255, 255, 0.35);
+    --lb-arrow-hover-text: #ffffff;
+    --lb-arrow-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    
+    --lb-folio-bg: #10121a;
+    --lb-folio-text: #d8dee9;
+    --lb-plate-bg: rgba(136, 192, 208, 0.12);
+    --lb-plate-border: rgba(136, 192, 208, 0.25);
+    --lb-plate-text: #88c0d0;
+    --lb-category-text: #81a1c1;
+    --lb-title-text: #eceff4;
+    --lb-subtitle-text: #94a3b8;
+    
+    --lb-metatag-bg: rgba(255, 255, 255, 0.05);
+    --lb-metatag-border: rgba(255, 255, 255, 0.1);
+    --lb-metatag-text: #cbd5e1;
+    
+    --lb-divider-bg: rgba(255, 255, 255, 0.08);
+    --lb-story-heading: #81a1c1;
+    --lb-story-bg: rgba(255, 255, 255, 0.03);
+    --lb-story-border: rgba(255, 255, 255, 0.06);
+    --lb-story-border-left: #88c0d0;
+    --lb-story-text: #e2e8f0;
+    
+    --lb-exif-bg: rgba(255, 255, 255, 0.03);
+    --lb-exif-border: rgba(255, 255, 255, 0.08);
+    --lb-exif-header: #81a1c1;
+    --lb-exif-label: #64748b;
+    --lb-exif-val: #e2e8f0;
   }
 
   .artbook-lightbox[hidden] {
@@ -274,7 +398,7 @@ const { items } = Astro.props;
   .lightbox-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.88);
+    background: var(--lb-backdrop-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
@@ -284,13 +408,13 @@ const { items } = Astro.props;
     z-index: 2;
     width: min(1280px, 92vw);
     height: min(840px, 88vh);
-    background: #10121a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--lb-container-bg);
+    border: 1px solid var(--lb-container-border);
     border-radius: 16px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    box-shadow: var(--lb-container-shadow);
   }
 
   /* Header */
@@ -299,8 +423,8 @@ const { items } = Astro.props;
     align-items: center;
     justify-content: space-between;
     padding: 16px 28px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: #141722;
+    border-bottom: 1px solid var(--lb-header-border);
+    background: var(--lb-header-bg);
   }
 
   .lightbox-brand {
@@ -309,7 +433,7 @@ const { items } = Astro.props;
     gap: 12px;
     font-size: 0.85rem;
     letter-spacing: 0.04em;
-    color: #e5e9f0;
+    color: var(--lb-brand-text);
     font-weight: 500;
   }
 
@@ -317,16 +441,16 @@ const { items } = Astro.props;
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #88c0d0;
-    box-shadow: 0 0 8px rgba(136, 192, 208, 0.6);
+    background: var(--lb-dot-bg);
+    box-shadow: var(--lb-dot-shadow);
   }
 
   .lightbox-divider {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--lb-divider-color);
   }
 
   .lightbox-counter {
-    color: #81a1c1;
+    color: var(--lb-counter-color);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.82rem;
   }
@@ -335,27 +459,27 @@ const { items } = Astro.props;
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: #eceff4;
+    background: var(--lb-close-bg);
+    border: 1px solid var(--lb-close-border);
+    color: var(--lb-close-text);
     padding: 6px 14px;
     border-radius: 999px;
     font-size: 0.78rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
 
   .lightbox-btn-close:hover {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.28);
-    color: #ffffff;
+    background: var(--lb-close-hover-bg);
+    border-color: var(--lb-close-hover-border);
+    color: var(--lb-close-hover-text);
   }
 
   .close-tip {
     font-size: 0.7rem;
-    color: #8892b0;
+    color: var(--lb-close-tip);
   }
 
   /* Body */
@@ -376,8 +500,8 @@ const { items } = Astro.props;
     align-items: center;
     justify-content: center;
     padding: 32px;
-    background: #07080c;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--lb-stage-bg);
+    border-right: 1px solid var(--lb-stage-border);
     min-width: 0;
     min-height: 0;
     width: 100%;
@@ -404,7 +528,7 @@ const { items } = Astro.props;
     height: auto;
     object-fit: contain;
     border-radius: 6px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--lb-img-shadow);
     background: transparent;
     display: block;
     user-select: none;
@@ -419,23 +543,23 @@ const { items } = Astro.props;
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: rgba(18, 22, 32, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #e5e9f0;
+    background: var(--lb-arrow-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--lb-arrow-border);
+    color: var(--lb-arrow-text);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--lb-arrow-shadow);
     z-index: 10;
   }
 
   .nav-arrow:hover {
-    background: rgba(30, 36, 52, 0.95);
-    border-color: rgba(255, 255, 255, 0.35);
-    color: #ffffff;
+    background: var(--lb-arrow-hover-bg);
+    border-color: var(--lb-arrow-hover-border);
+    color: var(--lb-arrow-hover-text);
     transform: translateY(-50%) scale(1.08);
   }
 
@@ -451,8 +575,8 @@ const { items } = Astro.props;
   .lightbox-folio {
     padding: 36px 32px;
     overflow-y: auto;
-    color: #d8dee9;
-    background: #10121a;
+    color: var(--lb-folio-text);
+    background: var(--lb-folio-bg);
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
@@ -481,15 +605,15 @@ const { items } = Astro.props;
   .folio-plate {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 700;
-    color: #88c0d0;
-    background: rgba(136, 192, 208, 0.12);
-    border: 1px solid rgba(136, 192, 208, 0.25);
+    color: var(--lb-plate-text);
+    background: var(--lb-plate-bg);
+    border: 1px solid var(--lb-plate-border);
     padding: 3px 8px;
     border-radius: 4px;
   }
 
   .folio-category {
-    color: #81a1c1;
+    color: var(--lb-category-text);
     font-weight: 500;
   }
 
@@ -498,13 +622,13 @@ const { items } = Astro.props;
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.25;
-    color: #eceff4;
+    color: var(--lb-title-text);
     margin: 0;
   }
 
   .folio-subtitle {
     font-size: 0.92rem;
-    color: #94a3b8;
+    color: var(--lb-subtitle-text);
     line-height: 1.5;
     margin: -4px 0 0;
   }
@@ -519,15 +643,15 @@ const { items } = Astro.props;
   .meta-tag {
     font-size: 0.76rem;
     padding: 4px 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--lb-metatag-bg);
+    border: 1px solid var(--lb-metatag-border);
     border-radius: 6px;
-    color: #cbd5e1;
+    color: var(--lb-metatag-text);
   }
 
   .folio-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--lb-divider-bg);
     margin: 6px 0;
   }
 
@@ -535,18 +659,18 @@ const { items } = Astro.props;
     font-size: 0.74rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #81a1c1;
+    color: var(--lb-story-heading);
     margin-bottom: 8px;
   }
 
   .folio-story {
     font-size: 0.92rem;
     line-height: 1.8;
-    color: #e2e8f0;
+    color: var(--lb-story-text);
     margin: 0;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-left: 3px solid #88c0d0;
+    background: var(--lb-story-bg);
+    border: 1px solid var(--lb-story-border);
+    border-left: 3px solid var(--lb-story-border-left);
     padding: 14px 16px;
     border-radius: 0 8px 8px 0;
   }
@@ -555,8 +679,8 @@ const { items } = Astro.props;
   .folio-exif-card {
     margin-top: 6px;
     padding: 16px 18px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--lb-exif-bg);
+    border: 1px solid var(--lb-exif-border);
     border-radius: 10px;
   }
 
@@ -566,7 +690,7 @@ const { items } = Astro.props;
     gap: 8px;
     font-size: 0.74rem;
     letter-spacing: 0.08em;
-    color: #81a1c1;
+    color: var(--lb-exif-header);
     font-weight: 600;
     margin-bottom: 12px;
   }
@@ -585,14 +709,14 @@ const { items } = Astro.props;
 
   .exif-label {
     font-size: 0.68rem;
-    color: #64748b;
+    color: var(--lb-exif-label);
     letter-spacing: 0.08em;
   }
 
   .exif-val {
     font-size: 0.82rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    color: #e2e8f0;
+    color: var(--lb-exif-val);
     font-weight: 500;
   }
 
@@ -606,7 +730,7 @@ const { items } = Astro.props;
     }
     .lightbox-stage {
       border-right: 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--lb-stage-border);
       padding: 20px;
     }
     .lightbox-folio {
