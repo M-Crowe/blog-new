@@ -28,10 +28,10 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
     <title>{item.title} · 单幅特写 | Marinus's ArtBook</title>
     <style>
       :root {
-        --bg-color: #FAFAFB;
-        --text-main: #2C2C2C;
-        --text-muted: #888888;
-        --border-color: #EEEEEE;
+        --bg-color: #090a0d;
+        --text-main: #eceff4;
+        --text-muted: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.08);
         --radius: 14px;
         --type-nav-size: 0.95rem;
       }
@@ -51,6 +51,7 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
         color: var(--text-main);
         line-height: 1.7;
+        background: var(--bg-color);
       }
 
       a {
@@ -81,34 +82,39 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         color: var(--text-muted);
       }
 
+      .back-group a {
+        transition: color 0.2s ease;
+      }
+
       .back-group a:hover {
-        color: var(--text-main);
+        color: #88c0d0;
       }
 
       .plate-badge {
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
         font-weight: 700;
         font-size: 0.85rem;
-        color: #2C2C2C;
-        background: #f0f0f2;
+        color: #88c0d0;
+        background: rgba(136, 192, 208, 0.12);
+        border: 1px solid rgba(136, 192, 208, 0.25);
         padding: 4px 10px;
         border-radius: 6px;
       }
 
       /* Hero Stage */
       .monograph-stage {
-        background: #ffffff;
-        border: 1px solid #eaeaea;
+        background: #10121a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: var(--radius);
         overflow: hidden;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
       }
 
       .media-box {
         position: relative;
         width: 100%;
-        background: #f7f7f9;
-        border-bottom: 1px solid #eeeeee;
+        background: #07080c;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -125,7 +131,7 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         height: auto;
         object-fit: contain;
         border-radius: 6px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
         display: block;
       }
 
@@ -149,7 +155,7 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         font-weight: 600;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: #888888;
+        color: #81a1c1;
       }
 
       .title {
@@ -157,7 +163,7 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         font-weight: 600;
         letter-spacing: -0.03em;
         line-height: 1.2;
-        color: #111;
+        color: #eceff4;
         margin: 0;
       }
 
@@ -172,9 +178,10 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         margin-top: 12px;
         font-size: 0.98rem;
         line-height: 1.85;
-        color: #333;
-        background: #fafafc;
-        border-left: 3px solid #2C2C2C;
+        color: #e2e8f0;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-left: 3px solid #88c0d0;
         padding: 16px 20px;
         border-radius: 0 8px 8px 0;
       }
@@ -187,8 +194,8 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
       }
 
       .meta-box-card {
-        background: #fafafc;
-        border: 1px solid #eaeaea;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
         padding: 24px;
         display: flex;
@@ -200,7 +207,7 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         font-size: 0.76rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--text-muted);
+        color: #81a1c1;
         margin: 0;
       }
 
@@ -221,8 +228,8 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
 
       /* EXIF Grid */
       .exif-box-card {
-        background: #ffffff;
-        border: 1px solid #eaeaea;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 12px;
         padding: 24px;
       }
@@ -231,7 +238,7 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         font-size: 0.76rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: var(--text-muted);
+        color: #81a1c1;
         margin: 0 0 16px;
       }
 
@@ -250,13 +257,13 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
       .exif-item .lbl {
         font-size: 0.68rem;
         letter-spacing: 0.08em;
-        color: #999;
+        color: #64748b;
       }
 
       .exif-item .val {
         font-size: 0.82rem;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-        color: #222;
+        color: #e2e8f0;
       }
 
       /* Footer Pagination */
@@ -272,8 +279,8 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
         align-items: center;
         gap: 8px;
         padding: 12px 20px;
-        background: #ffffff;
-        border: 1px solid #eaeaea;
+        background: #141722;
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 10px;
         font-size: 0.86rem;
         color: var(--text-main);
@@ -281,7 +288,8 @@ const nextItem = currentIndex < galleryItems.length - 1 ? galleryItems[currentIn
       }
 
       .page-btn:hover {
-        border-color: #111;
+        background: #1c2130;
+        border-color: #88c0d0;
         transform: translateY(-2px);
       }
 
