@@ -61,7 +61,7 @@ export async function parseImageExif(
     const camera = data?.Model
       ? `${data?.Make && !data.Model.includes(data.Make) ? data.Make + ' ' : ''}${data.Model}`.trim()
       : (data?.Make || '-');
-    const lens = data?.LensModel || data?.LensMake || 'Xiaomi Main Lens';
+    const lens = data?.LensModel || data?.LensMake || '-';
     const focalLength = data?.FocalLengthIn35mmFormat
       ? `${data.FocalLengthIn35mmFormat}mm eq.`
       : (data?.FocalLength ? `${Number(data.FocalLength.toFixed(1))}mm` : '-');

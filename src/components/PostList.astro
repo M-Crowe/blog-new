@@ -30,16 +30,51 @@ const formatDate = (date: Date) => {
 <div class="post-list">
   <div class="view-switcher-row">
     <div class="view-switcher" role="tablist" aria-label="文章视图切换">
-      <button class="view-tab is-active" type="button" data-view-toggle="list" role="tab" aria-selected="true">技术文章</button>
-      <button class="view-tab" type="button" data-view-toggle="gallery" role="tab" aria-selected="false">摄影画集</button>
+      <button
+        class="view-tab is-active"
+        type="button"
+        data-view-toggle="list"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panel-tech-posts"
+        id="tab-tech-posts"
+      >
+        技术文章
+      </button>
+      <button
+        class="view-tab"
+        type="button"
+        data-view-toggle="gallery"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-art-gallery"
+        id="tab-art-gallery"
+      >
+        摄影画集
+      </button>
     </div>
   </div>
 
-  <section class="view-panel" data-view-panel="gallery" aria-label="摄影画集视图" hidden>
+  <section
+    class="view-panel"
+    data-view-panel="gallery"
+    id="panel-art-gallery"
+    role="tabpanel"
+    aria-labelledby="tab-art-gallery"
+    aria-label="摄影画集视图"
+    hidden
+  >
     <ArtBookSpread volumes={artVolumes} showVolumeHeader={true} mode="album" />
   </section>
 
-  <section class="view-panel is-active" data-view-panel="list" aria-label="技术文章列表">
+  <section
+    class="view-panel is-active"
+    data-view-panel="list"
+    id="panel-tech-posts"
+    role="tabpanel"
+    aria-labelledby="tab-tech-posts"
+    aria-label="技术文章列表"
+  >
     <div class="article-list">
       {posts.map((post) => (
         <a
@@ -49,9 +84,9 @@ const formatDate = (date: Date) => {
           aria-label={`阅读文章《${post.title}》`}
         >
           <div class="article-row-main">
-            <h2 class="article-title">
+            <h3 class="article-title">
               <span>{post.title}</span>
-            </h2>
+            </h3>
             <p class="article-excerpt">{post.excerpt}</p>
             <div class="post-tags">
               {post.tags.map((tag) => (
@@ -76,10 +111,7 @@ const formatDate = (date: Date) => {
 <script>
   const setupViewSwitcher = () => {
     const root = document.querySelector('.post-list');
-
-    if (!root) {
-      return;
-    }
+    if (!root) return;
 
     const tabs = Array.from(root.querySelectorAll('[data-view-toggle]'));
     const panels = Array.from(root.querySelectorAll('[data-view-panel]'));
@@ -126,7 +158,7 @@ const formatDate = (date: Date) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(17, 17, 17, 0.14);
+    border-bottom: 1px solid rgba(17, 17, 17, 0.12);
     padding-bottom: 8px;
     flex-wrap: wrap;
     gap: 12px;
@@ -137,18 +169,6 @@ const formatDate = (date: Date) => {
     align-items: center;
     gap: 16px;
     width: fit-content;
-  }
-
-  .view-full-gallery-link {
-    font-size: 0.82rem;
-    color: #ff5e3a;
-    letter-spacing: 0.04em;
-    font-weight: 500;
-    transition: opacity 0.2s ease;
-  }
-
-  .view-full-gallery-link:hover {
-    opacity: 0.8;
   }
 
   .view-tab {
@@ -187,7 +207,7 @@ const formatDate = (date: Date) => {
     grid-template-columns: 1fr auto;
     gap: 22px;
     align-items: start;
-    border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+    border-bottom: 1px solid rgba(17, 17, 17, 0.1);
     padding: 14px 0 16px;
     transition: opacity 0.2s ease;
     color: inherit;
@@ -210,15 +230,14 @@ const formatDate = (date: Date) => {
     font-size: 1.35rem;
     line-height: 1.35;
     letter-spacing: -0.03em;
-  }
-
-  .article-title a {
-    color: #111;
+    font-weight: 600;
   }
 
   .article-excerpt {
     margin-top: 10px;
     color: rgba(17, 17, 17, 0.66);
+    font-size: 0.95rem;
+    line-height: 1.6;
   }
 
   .empty-state {
@@ -229,14 +248,6 @@ const formatDate = (date: Date) => {
     text-align: center;
   }
 
-  .post-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-
   time {
     font-size: 13px;
     color: rgba(17, 17, 17, 0.55);
@@ -244,42 +255,11 @@ const formatDate = (date: Date) => {
     text-transform: uppercase;
   }
 
-  .post-index {
-    font-size: 12px;
-    color: rgba(17, 17, 17, 0.48);
-    letter-spacing: 0.16em;
-  }
-
-  .post-title {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -0.04em;
-  }
-
-  .post-title a {
-    color: #111;
-    text-decoration: none;
-    transition: color 0.2s ease;
-  }
-
-  .post-title a:hover {
-    color: #4a4a4a;
-  }
-
-  .post-excerpt {
-    margin: 14px 0 0;
-    font-size: 16px;
-    color: rgba(17, 17, 17, 0.66);
-    line-height: 1.7;
-  }
-
   .post-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 16px;
+    margin-top: 14px;
   }
 
   .tag {
@@ -314,14 +294,6 @@ const formatDate = (date: Date) => {
   }
 
   @media (max-width: 780px) {
-    .gallery-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .gallery-cover-link {
-      aspect-ratio: 1 / 1.15;
-    }
-
     .article-row {
       grid-template-columns: 1fr;
       gap: 14px;
@@ -331,28 +303,6 @@ const formatDate = (date: Date) => {
     .article-row-side {
       justify-items: start;
       min-width: 0;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .gallery-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .post-title {
-      font-size: 20px;
-    }
-
-    .gallery-content {
-      padding: 10px 0 0;
-    }
-
-    .gallery-footer {
-      font-size: 0.78rem;
-    }
-
-    .gallery-overlay {
-      padding: 16px;
     }
   }
 </style>

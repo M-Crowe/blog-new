@@ -17,9 +17,8 @@
     "@astrojs/sitemap": "^3.7.4",
     "@chenglou/pretext": "^0.0.4",
     "@fontsource/monaspace-krypton": "^5.3.0",
-    "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.2",
-    "tailwindcss": "^4.3.3"
+    "yaml": "^2.7.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",

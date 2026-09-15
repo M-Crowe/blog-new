@@ -1,16 +1,43 @@
-@import "tailwindcss";
 @import "@fontsource/monaspace-krypton/400.css";
-@import "@fontsource/monaspace-krypton/500.css";
 @import "@fontsource/monaspace-krypton/600.css";
-@import "@fontsource/monaspace-krypton/700.css";
 
 :root {
+  --bg-color: #FAFAFB;
+  --text-main: #2C2C2C;
+  --text-muted: #888888;
+  --text-lighter: #999999;
+  --border-color: #EEEEEE;
+  --radius: 12px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: 'Monaspace Krypton', ui-monospace, SFMono-Regular, "Cascadia Code", "Fira Code", Menlo, Monaco, Consolas, monospace;
+  --primary-accent: #5E81AC;
+  --primary-glow: #88C0D0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 html {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;
   scrollbar-gutter: stable;
+}
+
+body {
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 /* 全局隐藏页面默认滚动条，同时完整保留鼠标滚轮与手势滑动功能 */

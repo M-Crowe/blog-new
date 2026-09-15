@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 import nordLightTheme from './src/styles/nord-light-theme.json';
 
@@ -13,9 +12,6 @@ export default defineConfig({
       theme: /** @type {any} */ (nordLightTheme),
       wrap: false,
     },
-  },
-  vite: {
-    plugins: [tailwindcss()],
   },
 });
 

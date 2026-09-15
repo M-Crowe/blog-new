@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="页面未找到 (404)" description="您访问的页面不存在或已被移除。">
+  <main class="not-found-main">
+    <div class="not-found-card">
+      <span class="error-code">404</span>
+      <h1 class="error-title">页面未找到</h1>
+      <p class="error-desc">
+        抱歉，您要寻找的页面可能已经被移动、删除，或输入的链接地址有误。
+      </p>
+      <div class="action-buttons">
+        <a href="/" class="btn btn-primary">返回首页</a>
+        <a href="/archive" class="btn btn-secondary">浏览文章归档</a>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .not-found-main {
+    min-height: 55vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+  }
+
+  .not-found-card {
+    text-align: center;
+    max-width: 520px;
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 48px 36px;
+  }
+
+  .error-code {
+    font-family: var(--font-mono);
+    font-size: 4.5rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--primary-accent);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .error-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 14px;
+  }
+
+  .error-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--text-main);
+    color: var(--bg-color);
+    border: 1px solid var(--text-main);
+  }
+
+  .btn-primary:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
+  }
+</style>

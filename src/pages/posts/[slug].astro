@@ -1,13 +1,13 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 import { siteConfig } from '../../lib/config';
-import '../../styles/global.css';
 
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
   const sorted = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
   return sorted.map((post, index) => ({
-    params: { slug: post.id.replace('.md', '') },
+    params: { slug: post.id.replace(/\.md$/, '') },
     props: {
       post,
       prevPost: index < sorted.length - 1 ? sorted[index + 1] : null,
@@ -26,7 +26,7 @@ const { post, prevPost, nextPost } = Astro.props;
 const { Content, headings } = await render(post);
 const filteredHeadings = (headings || []).filter((h) => h.depth === 2 || h.depth === 3);
 const postBanner = post.data.cover || '/covers/spings/night.jpg';
-const postSlug = post.id.replace('.md', '');
+const postSlug = post.id.replace(/\.md$/, '');
 const enableMouseAttraction = postSlug === 'pretext-canvas-typography';
 
 const formatDate = (date: Date) => {
@@ -61,1169 +61,1106 @@ const getReadingStats = (content: string = '', excerpt: string = '') => {
 const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
 ---
 
-<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{post.data.title} - {siteConfig.site.name}</title>
-    <style>
-      :root {
-        --bg-color: #FAFAFB;
-        --text-main: #2C2C2C;
-        --text-muted: #888888;
-        --line: #EEEEEE;
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      html {
-        font-size: 16px;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
-        background-color: var(--bg-color);
-        color: var(--text-main);
-        line-height: 1.8;
-      }
-
-      .container {
-        max-width: 1240px;
-        margin: 0 auto;
-        padding: 48px 20px 64px;
-      }
-
-      .post-banner {
-        width: 100vw;
-        height: clamp(170px, 21vw, 280px);
-        margin-left: calc(50% - 50vw);
-        margin-bottom: 28px;
-        position: relative;
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        overflow: hidden;
-        /* Nord color background */
-        background: #5E81AC;
-      }
-
-      .post-banner::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(250, 250, 251, 0.08), rgba(250, 250, 251, 0.22));
-        pointer-events: none;
-      }
-
-      .post-banner img {
-        display: none; /* Hide the image to show solid color */
-      }
-
-      .back-link {
-        font-size: 14px;
-        color: var(--text-muted);
-        text-decoration: none;
-        margin-bottom: 18px;
-        display: inline-block;
-        transition: color 0.2s ease;
-      }
-
-      .back-link:hover {
-        color: var(--text-main);
-      }
-
-      header {
-        margin-bottom: 26px;
-        padding-bottom: 24px;
-        border-bottom: 1px solid var(--line);
-      }
-
-      h1 {
-        font-size: clamp(1.8rem, 3.5vw, 2.25rem);
-        font-weight: 700;
-        line-height: 1.28;
-        letter-spacing: -0.02em;
-        margin-bottom: 14px;
-      }
-
-      .meta {
-        display: none;
-      }
-
-      .content-grid {
-        display: grid;
-        grid-template-columns: 220px minmax(0, 1fr) 200px;
-        gap: 36px;
-        align-items: start;
-      }
-
-      .post-aside {
-        position: sticky;
-        top: 24px;
-      }
-
-      .toc-aside {
-        position: sticky;
-        top: 24px;
-      }
-
-      /* Reading Progress Bar */
-      .reading-progress-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 3px;
-        width: 0%;
-        background: linear-gradient(90deg, #5E81AC, #88C0D0);
-        box-shadow: 0 1px 6px rgba(94, 129, 172, 0.4);
-        z-index: 10000;
-        transition: width 0.08s ease-out;
-        pointer-events: none;
-      }
-
-      .aside-label {
-        font-size: 0.8rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        margin-bottom: 8px;
-      }
-
-      .aside-date {
-        font-size: 14px;
-        color: var(--text-muted);
-        margin-bottom: 16px;
-      }
-
-      .aside-reading-stats {
-        font-size: 13.5px;
-        color: var(--text-muted);
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .stat-dot {
-        color: rgba(0, 0, 0, 0.25);
-      }
-
-      .tags {
-        display: flex;
-        flex-direction: column;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .tag {
-        display: inline-block;
-        padding: 2px 0;
-        border-bottom: 1px solid rgba(17, 17, 17, 0.16);
-        color: #666;
-        font-size: 12px;
-        letter-spacing: 0.04em;
-        width: fit-content;
-      }
-
-      .author-section {
-        margin-top: 32px;
-        padding: 20px;
-        background: rgba(0, 0, 0, 0.03);
-        border-radius: 8px;
-      }
-
-      .author-label {
-        font-size: 0.75rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        margin-bottom: 12px;
-        font-weight: 600;
-        display: block;
-      }
-
-      .author-info {
-        margin-bottom: 16px;
-      }
-
-      .author-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--text-main);
-        margin-bottom: 4px;
-      }
-
-      .author-link {
-        font-size: 13px;
-        color: #2C5D88;
-        text-decoration: underline;
-        text-decoration-color: rgba(94, 129, 172, 0.4);
-        transition: text-decoration-color 0.2s ease;
-      }
-
-      .author-link:hover {
-        text-decoration-color: #5E81AC;
-      }
-
-      /* Table of Contents */
-      .toc-section {
-        margin-top: 32px;
-        padding-top: 24px;
-      }
-
-      .toc-label {
-        font-size: 0.75rem;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        margin-bottom: 20px;
-        font-weight: 600;
-        display: block;
-      }
-
-      .toc-list {
-        list-style: none;
-        margin: 0 0 0 6px;
-        padding: 0;
-        font-size: 13.5px;
-        line-height: 1.6;
-        border-left: 1px solid rgba(94, 129, 172, 0.2);
-      }
-
-      :global(.toc-list li) {
-        margin-bottom: 12px;
-      }
-
-      :global(.toc-list a) {
-        display: block;
-        padding-left: 14px;
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        position: relative;
-        left: -1px;
-        border-left: 2px solid transparent;
-      }
-
-      :global(.toc-list a:hover) {
-        color: #5E81AC;
-        border-left-color: rgba(94, 129, 172, 0.5);
-      }
-
-      :global(.toc-list a.active) {
-        color: #1A4B75;
-        font-weight: 600;
-        border-left-color: #5E81AC;
-      }
-
-      :global(.toc-list li.toc-h3 a) {
-        font-size: 12.5px;
-        padding-left: 24px;
-      }
-
-      /* Back to Top Button */
-      .back-to-top {
-        position: fixed;
-        bottom: 40px;
-        right: 40px;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--bg-color);
-        border: 1px solid var(--line);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.3s ease, visibility 0.3s ease, background 0.2s ease;
-        font-size: 18px;
-        z-index: 999;
-      }
-
-      .back-to-top.visible {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      .back-to-top:hover {
-        background: rgba(0, 0, 0, 0.04);
-      }
-
-      .ai-badge {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid rgba(94, 129, 172, 0.25);
-        font-size: 12px;
-        line-height: 1.6;
-        color: #4a4a4a;
-      }
-
-      .ai-badge strong {
-        color: var(--text-main);
-        display: block;
-        margin-bottom: 6px;
-        font-size: 13px;
-      }
-
-      .ai-model {
-        font-size: 11px;
-        color: var(--text-muted);
-        margin-top: 6px;
-      }
-
-      article {
-        font-size: 17px;
-        line-height: 1.86;
-        color: #2f3640;
-        max-width: 68ch;
-      }
-
-      .ai-notice {
-        background: rgba(0, 0, 0, 0.03);
-        border-radius: 8px;
-        padding: 16px 20px;
-        margin-bottom: 40px;
-        font-size: 13px;
-        line-height: 1.6;
-        color: #2f3640;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .ai-notice-icon {
-        font-size: 18px;
-        flex-shrink: 0;
-      }
-
-      .ai-notice-content {
-        flex: 1;
-      }
-
-      .ai-notice-title {
-        font-weight: 600;
-        color: var(--text-main);
-        margin-bottom: 4px;
-        display: block;
-      }
-
-      .ai-notice-desc {
-        color: var(--text-muted);
-        font-size: 12px;
-      }
-
-      .gravity-orb {
-        position: fixed;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 40;
-        border: 1px solid rgba(94, 129, 172, 0.85);
-        background: radial-gradient(circle, rgba(94, 129, 172, 0.85), rgba(94, 129, 172, 0.14));
-        box-shadow: 0 0 24px rgba(94, 129, 172, 0.35);
-        transform: translate(-50%, -50%);
-      }
-
-
-
-      :global(article h2) {
-        font-size: 24px;
-        font-weight: 600;
-        margin-top: 40px;
-        margin-bottom: 16px;
-        letter-spacing: -0.02em;
-      }
-
-      :global(article h3) {
-        font-size: 20px;
-        font-weight: 600;
-        margin-top: 32px;
-        margin-bottom: 12px;
-      }
-
-      :global(article p) {
-        margin-bottom: 16px;
-        text-wrap: pretty;
-      }
-
-      :global(article :not(pre) > code) {
-        font-family: var(--font-mono, 'Monaspace Krypton', monospace);
-        font-size: 0.88em;
-        padding: 2px 6px;
-        border-radius: 4px;
-        background-color: rgba(94, 129, 172, 0.12);
-        color: #274C77;
-        border: 1px solid rgba(94, 129, 172, 0.25);
-        word-break: break-word;
-        font-weight: 500;
-      }
-
-      :global(.code-block-wrapper) {
-        position: relative;
-        margin: 28px 0;
-        border-radius: 8px;
-        border: 1px solid #D8DEE9;
-        background-color: #ECEFF4;
-        box-shadow: 0 4px 16px rgba(46, 52, 64, 0.08), 0 1px 3px rgba(46, 52, 64, 0.04);
-        overflow: hidden;
-        max-width: 100%;
-      }
-
-      :global(article pre) {
-        margin: 28px 0;
-        padding: 16px 18px 12px !important;
-        border-radius: 8px;
-        border: 1px solid #D8DEE9;
-        background-color: #ECEFF4 !important;
-        box-shadow: 0 4px 16px rgba(46, 52, 64, 0.08), 0 1px 3px rgba(46, 52, 64, 0.04);
-        overflow-x: auto;
-        max-width: 100%;
-        display: block;
-        box-sizing: border-box;
-        font-family: var(--font-mono, 'Monaspace Krypton', monospace);
-        font-size: 14px;
-        line-height: 1.75;
-        letter-spacing: -0.01em;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
-        scrollbar-width: thin !important;
-        scrollbar-color: #BAC3D2 #ECEFF4 !important;
-      }
-
-      :global(article pre::-webkit-scrollbar) {
-        display: block !important;
-        height: 8px !important;
-      }
-
-      :global(article pre::-webkit-scrollbar-track) {
-        display: block !important;
-        background: #ECEFF4 !important;
-        border-radius: 0 0 8px 8px !important;
-      }
-
-      :global(article pre::-webkit-scrollbar-thumb) {
-        display: block !important;
-        background: #BAC3D2 !important;
-        border-radius: 4px !important;
-        border: 2px solid #ECEFF4 !important;
-        transition: background 0.2s ease !important;
-      }
-
-      :global(article pre::-webkit-scrollbar-thumb:hover) {
-        background: #8892B0 !important;
-      }
-
-      :global(.code-block-wrapper pre) {
-        margin: 0 !important;
-        border: none !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        background-color: transparent !important;
-      }
-
-      :global(article pre code) {
-        display: block;
-        width: fit-content;
-        min-width: 100%;
-        background-color: transparent !important;
-        padding: 0 !important;
-        border: none !important;
-        font-family: inherit;
-        font-size: inherit;
-        line-height: inherit;
-        font-weight: 500;
-        color: #2E3440;
-      }
-
-      :global(article pre code span) {
-        font-family: inherit;
-        font-weight: 500;
-      }
-
-      :global(.code-toolbar) {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        height: 38px;
-        padding: 0 14px;
-        background: #E5E9F0;
-        border-bottom: 1px solid #D8DEE9;
-        user-select: none;
-        box-sizing: border-box;
-      }
-
-      :global(.code-lang-badge) {
-        font-family: var(--font-mono, 'Monaspace Krypton', monospace);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #434C5E;
-        background: rgba(46, 52, 64, 0.07);
-        padding: 2px 8px;
-        border-radius: 4px;
-        border: 1px solid rgba(46, 52, 64, 0.08);
-      }
-
-      :global(.code-copy-btn) {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 3px 9px;
-        font-size: 11.5px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #ECEFF4;
-        border: 1px solid #D8DEE9;
-        border-radius: 4px;
-        cursor: pointer;
-        color: #434C5E;
-        box-shadow: 0 1px 2px rgba(46, 52, 64, 0.05);
-        transition: all 0.2s ease;
-        user-select: none;
-      }
-
-      :global(.code-copy-btn:hover) {
-        background: #FFFFFF;
-        color: #2E3440;
-        border-color: #5E81AC;
-        box-shadow: 0 2px 5px rgba(46, 52, 64, 0.1);
-      }
-
-      :global(.code-copy-btn.copied) {
-        background: #E5F2E9;
-        border-color: #A3BE8C;
-        color: #2D6A4F;
-      }
-
-      :global(article ul),
-      :global(article ol) {
-        margin-left: 24px;
-        margin-bottom: 16px;
-      }
-
-      :global(article li) {
-        margin-bottom: 8px;
-        display: inline-block;
-        width: 100%;
-        transform: translate3d(0, 0, 0);
-        will-change: transform;
-      }
-
-      :global(article blockquote) {
-        border-left: 3px solid #5E81AC;
-        padding: 14px 16px;
-        margin-left: 0;
-        margin-bottom: 20px;
-        margin-top: 0;
-        color: #4b5563;
-        font-style: normal;
-        background: rgba(94, 129, 172, 0.08);
-        border-top: 1px solid rgba(94, 129, 172, 0.2);
-        border-bottom: 1px solid rgba(94, 129, 172, 0.2);
-        position: relative;
-      }
-
-      :global(article blockquote)::before {
-        content: '💡 提示';
-        display: block;
-        font-size: 0.75rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #2f3640;
-        font-weight: 600;
-        margin-bottom: 8px;
-      }
-
-      :global(article blockquote p) {
-        margin: 0;
-        font-size: 0.95rem;
-        line-height: 1.6;
-      }
-
-      :global(article blockquote p:last-child) {
-        margin-bottom: 0;
-      }
-
-      /* Post Navigation Cards */
-      .post-nav-cards {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin: 48px 0 24px;
-        padding-top: 28px;
-        border-top: 1px solid var(--line);
-      }
-
-      .post-nav-card {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        padding: 16px 20px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #ffffff;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        text-decoration: none;
-      }
-
-      .post-nav-card:hover {
-        border-color: rgba(94, 129, 172, 0.6);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(94, 129, 172, 0.08);
-      }
-
-      .post-nav-card.next-card {
-        text-align: right;
-      }
-
-      .nav-direction {
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        font-weight: 500;
-      }
-
-      .nav-title {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text-main);
-        line-height: 1.4;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .post-nav-card.empty-card {
-        border: none;
-        background: transparent;
-        pointer-events: none;
-      }
-
-      .post-footer {
-        margin-top: 48px;
-        padding-top: 30px;
-        border-top: 1px solid var(--line);
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        line-height: 1.8;
-      }
-
-      .footer-links {
-        margin-bottom: 12px;
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-      }
-
-      .footer-links a {
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: color 0.2s ease;
-      }
-
-      .footer-links a:hover {
-        color: var(--text-main);
-      }
-
-      .footer-desc {
-        font-size: 0.8rem;
-        margin-top: 12px;
-      }
-
-      @media (max-width: 1024px) {
-        .content-grid {
-          grid-template-columns: 220px minmax(0, 1fr);
-        }
-        .toc-aside {
-          display: none;
-        }
-      }
-
-      @media (max-width: 600px) {
-        .container {
-          padding: 40px 16px;
-        }
-
-        .post-banner {
-          margin-bottom: 22px;
-        }
-
-        h1 {
-          font-size: 24px;
-        }
-
-        .content-grid {
-          grid-template-columns: 1fr;
-          gap: 18px;
-        }
-
-        .post-aside {
-          position: static;
-          border-bottom: 1px solid var(--line);
-          padding-bottom: 14px;
-        }
-
-        .tags {
-          flex-direction: row;
-          gap: 8px 14px;
-        }
-
-        :global(article h2) {
-          font-size: 20px;
-        }
-
-        .back-to-top {
-          bottom: 20px;
-          right: 20px;
-          width: 36px;
-          height: 36px;
-          font-size: 16px;
-        }
-
-        .toc-section {
-          display: none;
-        }
-      }
-    </style>
-  </head>
-  <body data-pretext-attract={enableMouseAttraction ? 'true' : 'false'}>
-    <!-- 顶部阅读进度条 -->
-    <div id="reading-progress-bar" class="reading-progress-bar" aria-hidden="true"></div>
-
-    <div class="container">
-      <header class="post-hero">
-        <div class="post-banner">
-          <img src={postBanner} alt={post.data.title} loading="eager" />
+<BaseLayout
+  title={post.data.title}
+  description={post.data.excerpt}
+  image={postBanner}
+  article={{
+    date: post.data.date,
+    tags: post.data.tags,
+    author: post.data.author || siteConfig.author.name,
+  }}
+  maxWidth="1240px"
+  showHeader={false}
+  showFooter={false}
+>
+  <!-- 顶部阅读进度条 -->
+  <div id="reading-progress-bar" class="reading-progress-bar" aria-hidden="true"></div>
+
+  <div class="post-page-content" data-pretext-attract={enableMouseAttraction ? 'true' : 'false'}>
+    <header class="post-hero">
+      <div class="post-banner" aria-hidden="true"></div>
+      <h1 class="post-main-title">{post.data.title}</h1>
+    </header>
+
+    <div class="content-grid">
+      <aside class="post-aside">
+        <a href="/" class="back-link">← 返回首页</a>
+        <p class="aside-label">Published</p>
+        <time class="aside-date" datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+
+        <p class="aside-label">Reading</p>
+        <div class="aside-reading-stats">
+          <span>{readingStats.wordsFormatted} 字</span>
+          <span class="stat-dot">·</span>
+          <span>约 {readingStats.minutes} 分钟</span>
         </div>
-        <h1>{post.data.title}</h1>
-      </header>
 
-      <div class="content-grid">
-        <aside class="post-aside">
-          <a href="/" class="back-link">← 返回首页</a>
-          <p class="aside-label">Published</p>
-          <time class="aside-date" datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+        <p class="aside-label">Tags</p>
+        <div class="tags">
+          {post.data.tags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
 
-          <p class="aside-label">Reading</p>
-          <div class="aside-reading-stats">
-            <span>{readingStats.wordsFormatted} 字</span>
-            <span class="stat-dot">·</span>
-            <span>约 {readingStats.minutes} 分钟</span>
-          </div>
+        <div class="author-section">
+          <span class="author-label">About This Article</span>
 
-          <p class="aside-label">Tags</p>
-          <div class="tags">
-            {post.data.tags.map((tag) => (
-              <span class="tag">{tag}</span>
-            ))}
-          </div>
-          
-          <div class="author-section">
-            <span class="author-label">About This Article</span>
-            
-            {post.data.author && (
-              <div class="author-info">
-                <div class="author-name">{post.data.author}</div>
-                {post.data.authorUrl ? (
-                  <a href={post.data.authorUrl} class="author-link" target="_blank" rel="noopener noreferrer">
-                    Visit Profile →
-                  </a>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </aside>
-
-        <article>
-          {post.data.aiGenerated && (
-            <div class="ai-notice">
-              <span class="ai-notice-icon">📝</span>
-              <div class="ai-notice-content">
-                <span class="ai-notice-title">本文为 AI 辅助生成</span>
-                <span class="ai-notice-desc">
-                  {post.data.aiModel && `生成模型：${post.data.aiModel}`}
-                  {post.data.author && ` • 参考资源：${post.data.author}`}
-                </span>
-              </div>
+          {post.data.author && (
+            <div class="author-info">
+              <div class="author-name">{post.data.author}</div>
+              {post.data.authorUrl ? (
+                <a href={post.data.authorUrl} class="author-link" target="_blank" rel="noopener noreferrer">
+                  Visit Profile →
+                </a>
+              ) : null}
             </div>
           )}
-          <Content />
-          
-          <!-- 上下一篇文章导航卡片 -->
-          {(prevPost || nextPost) && (
-            <nav class="post-nav-cards" aria-label="文章快速跳转">
-              {prevPost ? (
-                <a href={`/posts/${prevPost.id.replace('.md', '')}`} class="post-nav-card prev-card">
-                  <span class="nav-direction">← 上一篇</span>
-                  <span class="nav-title">{prevPost.data.title}</span>
-                </a>
-              ) : (
-                <div class="post-nav-card empty-card" />
-              )}
-              {nextPost ? (
-                <a href={`/posts/${nextPost.id.replace('.md', '')}`} class="post-nav-card next-card">
-                  <span class="nav-direction">下一篇 →</span>
-                  <span class="nav-title">{nextPost.data.title}</span>
-                </a>
-              ) : (
-                <div class="post-nav-card empty-card" />
-              )}
-            </nav>
-          )}
+        </div>
+      </aside>
 
-          <footer class="post-footer">
-            <div class="footer-links">
-              <a href={siteConfig.author.github} target="_blank" rel="noopener noreferrer">
-                GitHub
+      <article class="post-article-body">
+        {post.data.aiGenerated && (
+          <div class="ai-notice">
+            <span class="ai-notice-icon">📝</span>
+            <div class="ai-notice-content">
+              <span class="ai-notice-title">本文为 AI 辅助生成</span>
+              <span class="ai-notice-desc">
+                {post.data.aiModel && `生成模型：${post.data.aiModel}`}
+                {post.data.author && ` • 参考资源：${post.data.author}`}
+              </span>
+            </div>
+          </div>
+        )}
+        <Content />
+
+        <!-- 上下一篇文章导航卡片 -->
+        {(prevPost || nextPost) && (
+          <nav class="post-nav-cards" aria-label="文章快速跳转">
+            {prevPost ? (
+              <a href={`/posts/${prevPost.id.replace(/\.md$/, '')}`} class="post-nav-card prev-card">
+                <span class="nav-direction">← 上一篇</span>
+                <span class="nav-title">{prevPost.data.title}</span>
               </a>
-              <a href="/">返回首页</a>
-            </div>
-            <p class="footer-desc">
-              {siteConfig.footer.copyright}
-            </p>
-          </footer>
-        </article>
+            ) : (
+              <div class="post-nav-card empty-card" />
+            )}
+            {nextPost ? (
+              <a href={`/posts/${nextPost.id.replace(/\.md$/, '')}`} class="post-nav-card next-card">
+                <span class="nav-direction">下一篇 →</span>
+                <span class="nav-title">{nextPost.data.title}</span>
+              </a>
+            ) : (
+              <div class="post-nav-card empty-card" />
+            )}
+          </nav>
+        )}
 
-        <aside class="toc-aside">
-          {filteredHeadings.length > 0 && (
-            <div class="toc-section" id="toc-container">
-              <span class="toc-label">目录</span>
-              <ul class="toc-list" id="toc-list">
-                {filteredHeadings.map((h) => (
-                  <li class={h.depth === 3 ? 'toc-h3' : 'toc-h2'}>
-                    <a href={`#${h.slug}`}>{h.text}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </aside>
-      </div>
+        <footer class="post-footer">
+          <div class="footer-links">
+            <a href={siteConfig.author.github} target="_blank" rel="noopener noreferrer">
+              GitHub
+            </a>
+            <a href="/">返回首页</a>
+            <a href="/rss.xml" target="_blank">RSS</a>
+          </div>
+          <p class="footer-desc">
+            {siteConfig.footer.copyright}
+          </p>
+        </footer>
+      </article>
+
+      <aside class="toc-aside">
+        {filteredHeadings.length > 0 && (
+          <div class="toc-section" id="toc-container">
+            <span class="toc-label">目录</span>
+            <ul class="toc-list" id="toc-list">
+              {filteredHeadings.map((h) => (
+                <li class={h.depth === 3 ? 'toc-h3' : 'toc-h2'}>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </aside>
     </div>
+  </div>
 
-    <button class="back-to-top" id="back-to-top" title="回到顶部">↑</button>
+  <button class="back-to-top" id="back-to-top" type="button" aria-label="回到顶部" title="回到顶部">↑</button>
 
-    <!-- 核心 UI 交互脚本（零外部依赖，即刻初始化） -->
-    <script is:inline>
-      // 1. 阅读进度条
-      function setupReadingProgressBar() {
-        var bar = document.getElementById('reading-progress-bar');
-        if (!bar) return;
-        function updateProgress() {
-          var totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-          if (totalHeight <= 0) {
-            bar.style.width = '0%';
-            return;
-          }
-          var progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
-          bar.style.width = progress + '%';
+  <!-- 核心 UI 交互脚本 -->
+  <script is:inline>
+    // 1. 阅读进度条
+    function setupReadingProgressBar() {
+      var bar = document.getElementById('reading-progress-bar');
+      if (!bar) return;
+      function updateProgress() {
+        var totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+        if (totalHeight <= 0) {
+          bar.style.width = '0%';
+          return;
         }
-        window.addEventListener('scroll', updateProgress, { passive: true });
-        window.addEventListener('resize', updateProgress, { passive: true });
-        updateProgress();
+        var progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
+        bar.style.width = progress + '%';
       }
+      window.addEventListener('scroll', updateProgress, { passive: true });
+      window.addEventListener('resize', updateProgress, { passive: true });
+      updateProgress();
+    }
 
-      // 2. 目录 (TOC) 锚点平滑跳转与 ScrollSpy 高亮
-      function setupTOC() {
-        var tocLinks = Array.from(document.querySelectorAll('.toc-list a'));
-        if (!tocLinks.length) return;
+    // 2. 目录 (TOC) 锚点平滑跳转与 ScrollSpy 高亮
+    function setupTOC() {
+      var tocLinks = Array.from(document.querySelectorAll('.toc-list a'));
+      if (!tocLinks.length) return;
+
+      tocLinks.forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          var href = link.getAttribute('href');
+          if (href && href.startsWith('#')) {
+            var targetId = href.slice(1);
+            var target = document.getElementById(targetId);
+            if (target) {
+              e.preventDefault();
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              history.pushState(null, '', href);
+            }
+          }
+        });
+      });
+
+      function updateActiveTOC() {
+        var scrollY = window.scrollY;
+        var currentSlug = null;
+
+        for (var i = 0; i < tocLinks.length; i++) {
+          var link = tocLinks[i];
+          var href = link.getAttribute('href');
+          if (href && href.startsWith('#')) {
+            var target = document.getElementById(href.slice(1));
+            if (target) {
+              var top = target.getBoundingClientRect().top + scrollY - 100;
+              if (scrollY >= top) {
+                currentSlug = href.slice(1);
+              }
+            }
+          }
+        }
 
         tocLinks.forEach(function (link) {
-          link.addEventListener('click', function (e) {
-            var href = link.getAttribute('href');
-            if (href && href.startsWith('#')) {
-              var targetId = href.slice(1);
-              var target = document.getElementById(targetId);
-              if (target) {
-                e.preventDefault();
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                history.pushState(null, '', href);
-              }
-            }
-          });
+          var href = link.getAttribute('href');
+          if (currentSlug && href === '#' + currentSlug) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
         });
+      }
 
-        function updateActiveTOC() {
-          var scrollY = window.scrollY;
-          var currentSlug = null;
+      window.addEventListener('scroll', updateActiveTOC, { passive: true });
+      updateActiveTOC();
+    }
 
-          for (var i = 0; i < tocLinks.length; i++) {
-            var link = tocLinks[i];
-            var href = link.getAttribute('href');
-            if (href && href.startsWith('#')) {
-              var target = document.getElementById(href.slice(1));
-              if (target) {
-                var top = target.getBoundingClientRect().top + scrollY - 100;
-                if (scrollY >= top) {
-                  currentSlug = href.slice(1);
-                }
-              }
+    // 3. 代码块顶部工具栏（语言徽标 + 复制按钮）
+    function setupCodeCopyButtons() {
+      var preBlocks = document.querySelectorAll('article pre');
+      if (!preBlocks.length) return;
+
+      preBlocks.forEach(function (pre) {
+        if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) return;
+
+        var code = pre.querySelector('code');
+        var lang = pre.getAttribute('data-language') || pre.dataset.language || (code ? code.getAttribute('data-language') || code.dataset.language : '') || '';
+        if (!lang) {
+          var classes = Array.from(pre.classList).concat(code ? Array.from(code.classList) : []);
+          for (var i = 0; i < classes.length; i++) {
+            var cls = classes[i];
+            if (cls.startsWith('language-')) {
+              lang = cls.replace('language-', '');
+              break;
+            } else if (cls.startsWith('lang-')) {
+              lang = cls.replace('lang-', '');
+              break;
             }
           }
-
-          tocLinks.forEach(function (link) {
-            var href = link.getAttribute('href');
-            if (currentSlug && href === '#' + currentSlug) {
-              link.classList.add('active');
-            } else {
-              link.classList.remove('active');
-            }
-          });
+        }
+        if (!lang || lang === 'plaintext') {
+          lang = 'CODE';
         }
 
-        window.addEventListener('scroll', updateActiveTOC, { passive: true });
-        updateActiveTOC();
-      }
+        var wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper';
 
-      // 3. 代码块顶部工具栏（语言徽标 + 复制按钮）
-      function setupCodeCopyButtons() {
-        var preBlocks = document.querySelectorAll('article pre');
-        if (!preBlocks.length) return;
+        var toolbar = document.createElement('div');
+        toolbar.className = 'code-toolbar';
 
-        preBlocks.forEach(function (pre) {
-          if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) return;
+        var langBadge = document.createElement('span');
+        langBadge.className = 'code-lang-badge';
+        langBadge.textContent = lang.toUpperCase();
+        toolbar.appendChild(langBadge);
 
-          var code = pre.querySelector('code');
-          var lang = pre.getAttribute('data-language') || pre.dataset.language || (code ? code.getAttribute('data-language') || code.dataset.language : '') || '';
-          if (!lang) {
-            var classes = Array.from(pre.classList).concat(code ? Array.from(code.classList) : []);
-            for (var i = 0; i < classes.length; i++) {
-              var cls = classes[i];
-              if (cls.startsWith('language-')) {
-                lang = cls.replace('language-', '');
-                break;
-              } else if (cls.startsWith('lang-')) {
-                lang = cls.replace('lang-', '');
-                break;
-              }
-            }
-          }
-          if (!lang || lang === 'plaintext') {
-            lang = 'CODE';
-          }
+        var button = document.createElement('button');
+        button.className = 'code-copy-btn';
+        button.type = 'button';
+        button.setAttribute('aria-label', '复制代码');
+        button.innerHTML = '<svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span class="copy-text">复制</span>';
+        toolbar.appendChild(button);
 
-          var wrapper = document.createElement('div');
-          wrapper.className = 'code-block-wrapper';
+        var parent = pre.parentNode;
+        if (parent) {
+          parent.insertBefore(wrapper, pre);
+          wrapper.appendChild(toolbar);
+          wrapper.appendChild(pre);
+        }
 
-          var toolbar = document.createElement('div');
-          toolbar.className = 'code-toolbar';
-
-          var langBadge = document.createElement('span');
-          langBadge.className = 'code-lang-badge';
-          langBadge.textContent = lang.toUpperCase();
-          toolbar.appendChild(langBadge);
-
-          var button = document.createElement('button');
-          button.className = 'code-copy-btn';
-          button.type = 'button';
-          button.setAttribute('aria-label', '复制代码');
-          button.innerHTML = '<svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span class="copy-text">复制</span>';
-          toolbar.appendChild(button);
-
-          var parent = pre.parentNode;
-          if (parent) {
-            parent.insertBefore(wrapper, pre);
-            wrapper.appendChild(toolbar);
-            wrapper.appendChild(pre);
-          }
-
-          button.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var textToCopy = code ? code.textContent || '' : pre.textContent || '';
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(textToCopy).then(function () {
-                button.classList.add('copied');
-                button.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="copy-text">已复制</span>';
-                setTimeout(function () {
-                  button.classList.remove('copied');
-                  button.innerHTML = '<svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span class="copy-text">复制</span>';
-                }, 2000);
-              }).catch(function (err) {
-                console.error('Failed to copy: ', err);
-              });
-            }
-          });
-        });
-      }
-
-      // 4. 回到顶部按钮
-      function setupBackToTop() {
-        var backToTopBtn = document.getElementById('back-to-top');
-        if (!backToTopBtn) return;
-
-        window.addEventListener('scroll', function () {
-          if (window.scrollY > 300) {
-            backToTopBtn.classList.add('visible');
-          } else {
-            backToTopBtn.classList.remove('visible');
-          }
-        }, { passive: true });
-
-        backToTopBtn.addEventListener('click', function () {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      }
-
-      function initPostPageUI() {
-        setupReadingProgressBar();
-        setupTOC();
-        setupCodeCopyButtons();
-        setupBackToTop();
-      }
-
-      initPostPageUI();
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPostPageUI);
-      }
-      document.addEventListener('astro:page-load', initPostPageUI);
-    </script>
-
-    {enableMouseAttraction && (
-      <script>
-        // @ts-nocheck
-        import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
-
-        const renderTextBlockWithPretext = (element) => {
-          if (element.dataset.pretextRendered === 'true' || element.closest('pre, code')) return;
-          const text = element.textContent?.trim();
-          if (!text) return;
-
-          const styles = window.getComputedStyle(element);
-          const fontSize = Number.parseFloat(styles.fontSize);
-          const lineHeightValue = Number.parseFloat(styles.lineHeight);
-          const lineHeight = Number.isNaN(lineHeightValue) ? fontSize * 1.86 : lineHeightValue;
-          const font = `${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
-          const width = Math.max(1, element.clientWidth);
-          const drawWidth = Math.max(1, width - 16);
-
-          try {
-            const prepared = prepareWithSegments(text, font);
-            const { lines } = layoutWithLines(prepared, drawWidth, lineHeight);
-            if (!lines?.length) return;
-
-            element.innerHTML = '';
-            lines.forEach((line) => {
-              const span = document.createElement('span');
-              span.textContent = line.text;
-              span.style.display = 'block';
-              span.style.lineHeight = `${lineHeight}px`;
-              span.style.transform = 'translate3d(0, 0, 0)';
-              span.style.willChange = 'transform';
-              element.appendChild(span);
+        button.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var textToCopy = code ? code.textContent || '' : pre.textContent || '';
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textToCopy).then(function () {
+              button.classList.add('copied');
+              button.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="copy-text">已复制</span>';
+              setTimeout(function () {
+                button.classList.remove('copied');
+                button.innerHTML = '<svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span class="copy-text">复制</span>';
+              }, 2000);
+            }).catch(function (err) {
+              console.error('Failed to copy: ', err);
             });
-
-            element.dataset.pretextRendered = 'true';
-            return { lines, spans: Array.from(element.children), lineHeight };
-          } catch (err) {
-            console.error('Pretext error:', err);
           }
+        });
+      });
+    }
+
+    // 4. 回到顶部按钮
+    function setupBackToTop() {
+      var backToTopBtn = document.getElementById('back-to-top');
+      if (!backToTopBtn) return;
+
+      window.addEventListener('scroll', function () {
+        if (window.scrollY > 300) {
+          backToTopBtn.classList.add('visible');
+        } else {
+          backToTopBtn.classList.remove('visible');
+        }
+      }, { passive: true });
+
+      backToTopBtn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    function initPostPageUI() {
+      setupReadingProgressBar();
+      setupTOC();
+      setupCodeCopyButtons();
+      setupBackToTop();
+    }
+
+    initPostPageUI();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPostPageUI);
+    }
+    document.addEventListener('astro:page-load', initPostPageUI);
+  </script>
+
+  {enableMouseAttraction && (
+    <script>
+      // @ts-nocheck
+      import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+
+      const renderTextBlockWithPretext = (element) => {
+        if (element.dataset.pretextRendered === 'true' || element.closest('pre, code')) return;
+        const text = element.textContent?.trim();
+        if (!text) return;
+
+        const styles = window.getComputedStyle(element);
+        const fontSize = Number.parseFloat(styles.fontSize);
+        const lineHeightValue = Number.parseFloat(styles.lineHeight);
+        const lineHeight = Number.isNaN(lineHeightValue) ? fontSize * 1.86 : lineHeightValue;
+        const font = `${styles.fontWeight} ${styles.fontSize} ${styles.fontFamily}`;
+        const width = Math.max(1, element.clientWidth);
+        const drawWidth = Math.max(1, width - 16);
+
+        try {
+          const prepared = prepareWithSegments(text, font);
+          const { lines } = layoutWithLines(prepared, drawWidth, lineHeight);
+          if (!lines?.length) return;
+
+          element.innerHTML = '';
+          lines.forEach((line) => {
+            const span = document.createElement('span');
+            span.textContent = line.text;
+            span.style.display = 'block';
+            span.style.lineHeight = `${lineHeight}px`;
+            span.style.transform = 'translate3d(0, 0, 0)';
+            span.style.willChange = 'transform';
+            element.appendChild(span);
+          });
+
+          element.dataset.pretextRendered = 'true';
+          return { lines, spans: Array.from(element.children), lineHeight };
+        } catch (err) {
+          console.error('Pretext error:', err);
+        }
+      };
+
+      const setupMouseAttraction = () => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const article = document.querySelector('article');
+        if (!article) return;
+
+        const result = [];
+        article.querySelectorAll('p').forEach((el) => {
+          if (el.closest('pre, code, .ai-notice, .post-nav-cards, .post-footer')) return;
+          const rendered = renderTextBlockWithPretext(el);
+          if (rendered) {
+            result.push({
+              element: el,
+              lines: rendered.lines,
+              spans: rendered.spans,
+              lineHeight: rendered.lineHeight,
+            });
+          }
+        });
+
+        if (!result.length) return;
+
+        const orbEl = document.createElement('div');
+        orbEl.className = 'gravity-orb';
+        document.body.appendChild(orbEl);
+
+        const orb = {
+          x: window.innerWidth * 0.5,
+          y: window.innerHeight * 0.45,
+          tx: window.innerWidth * 0.5,
+          ty: window.innerHeight * 0.45,
         };
 
-        const setupMouseAttraction = () => {
-          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-          const article = document.querySelector('article');
-          if (!article) return;
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        const models = result.flatMap((block) =>
+          block.spans.map((span, idx) => ({
+            span,
+            line: block.lines[idx],
+            isListItem: false,
+            offsetX: 0,
+            offsetY: 0,
+          }))
+        );
 
-          const result = [];
-          article.querySelectorAll('p').forEach((el) => {
-            if (el.closest('pre, code, .ai-notice, .post-nav-cards, .post-footer')) return;
-            const rendered = renderTextBlockWithPretext(el);
-            if (rendered) {
-              result.push({
-                element: el,
-                lines: rendered.lines,
-                spans: rendered.spans,
-                lineHeight: rendered.lineHeight,
-              });
-            }
+        let rafId = 0;
+        const tick = () => {
+          orb.x += (orb.tx - orb.x) * 0.2;
+          orb.y += (orb.ty - orb.y) * 0.2;
+          orbEl.style.left = `${orb.x}px`;
+          orbEl.style.top = `${orb.y}px`;
+
+          models.forEach((model) => {
+            const spanRect = model.span.getBoundingClientRect();
+            const cx = spanRect.left + spanRect.width / 2;
+            const cy = spanRect.top + spanRect.height / 2;
+
+            const dx = orb.x - cx;
+            const dy = orb.y - cy;
+            const distance = Math.hypot(dx, dy);
+            const influence = Math.max(0, 1 - distance / 300);
+
+            const targetX = clamp(dx * 0.18 * influence, -32, 32);
+            const targetY = clamp(dy * 0.14 * influence, -16, 16);
+
+            model.offsetX += (targetX - model.offsetX) * 0.2;
+            model.offsetY += (targetY - model.offsetY) * 0.2;
+            model.span.style.transform = `translate(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px)`;
           });
-
-          if (!result.length) return;
-
-          const orbEl = document.createElement('div');
-          orbEl.className = 'gravity-orb';
-          document.body.appendChild(orbEl);
-
-          const orb = {
-            x: window.innerWidth * 0.5,
-            y: window.innerHeight * 0.45,
-            tx: window.innerWidth * 0.5,
-            ty: window.innerHeight * 0.45,
-          };
-
-          const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-          const models = result.flatMap((block) =>
-            block.spans.map((span, idx) => ({
-              span,
-              line: block.lines[idx],
-              isListItem: false,
-              offsetX: 0,
-              offsetY: 0,
-            }))
-          );
-
-          let rafId = 0;
-          const tick = () => {
-            orb.x += (orb.tx - orb.x) * 0.2;
-            orb.y += (orb.ty - orb.y) * 0.2;
-            orbEl.style.left = `${orb.x}px`;
-            orbEl.style.top = `${orb.y}px`;
-
-            models.forEach((model) => {
-              const spanRect = model.span.getBoundingClientRect();
-              const cx = spanRect.left + spanRect.width / 2;
-              const cy = spanRect.top + spanRect.height / 2;
-
-              const dx = orb.x - cx;
-              const dy = orb.y - cy;
-              const distance = Math.hypot(dx, dy);
-              const influence = Math.max(0, 1 - distance / 300);
-
-              const targetX = clamp(dx * 0.18 * influence, -32, 32);
-              const targetY = clamp(dy * 0.14 * influence, -16, 16);
-
-              model.offsetX += (targetX - model.offsetX) * 0.2;
-              model.offsetY += (targetY - model.offsetY) * 0.2;
-              model.span.style.transform = `translate(${model.offsetX.toFixed(1)}px, ${model.offsetY.toFixed(1)}px)`;
-            });
-
-            rafId = requestAnimationFrame(tick);
-          };
-
-          const onMove = (e) => {
-            orb.tx = e.clientX;
-            orb.ty = e.clientY;
-          };
-
-          const onLeave = () => {
-            orb.tx = window.innerWidth * 0.5;
-            orb.ty = window.innerHeight * 0.45;
-          };
 
           rafId = requestAnimationFrame(tick);
-          window.addEventListener('mousemove', onMove);
-          window.addEventListener('mouseleave', onLeave);
-          window.addEventListener('blur', onLeave);
         };
 
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', setupMouseAttraction);
-        } else {
-          setupMouseAttraction();
-        }
-      </script>
-    )}
-  </body>
-</html>
+        const onMove = (e) => {
+          orb.tx = e.clientX;
+          orb.ty = e.clientY;
+        };
+
+        const onLeave = () => {
+          orb.tx = window.innerWidth * 0.5;
+          orb.ty = window.innerHeight * 0.45;
+        };
+
+        rafId = requestAnimationFrame(tick);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseleave', onLeave);
+        window.addEventListener('blur', onLeave);
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupMouseAttraction);
+      } else {
+        setupMouseAttraction();
+      }
+    </script>
+  )}
+</BaseLayout>
+
+<style>
+  .post-page-content {
+    padding: 32px 0 64px;
+  }
+
+  .post-banner {
+    width: 100vw;
+    height: clamp(170px, 21vw, 280px);
+    margin-left: calc(50% - 50vw);
+    margin-bottom: 28px;
+    position: relative;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--primary-accent, #5E81AC);
+  }
+
+  .back-link {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: 18px;
+    display: inline-block;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--text-main);
+  }
+
+  header.post-hero {
+    margin-bottom: 26px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-main-title {
+    font-size: clamp(1.8rem, 3.5vw, 2.25rem);
+    font-weight: 700;
+    line-height: 1.28;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    color: var(--text-main);
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) 200px;
+    gap: 36px;
+    align-items: start;
+  }
+
+  .post-aside {
+    position: sticky;
+    top: 24px;
+  }
+
+  .toc-aside {
+    position: sticky;
+    top: 24px;
+  }
+
+  /* Reading Progress Bar */
+  .reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #5E81AC, #88C0D0);
+    box-shadow: 0 1px 6px rgba(94, 129, 172, 0.4);
+    z-index: 10000;
+    transition: width 0.08s ease-out;
+    pointer-events: none;
+  }
+
+  .aside-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .aside-date {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .aside-reading-stats {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-dot {
+    color: rgba(0, 0, 0, 0.25);
+  }
+
+  .tags {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(17, 17, 17, 0.16);
+    color: #666;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    width: fit-content;
+  }
+
+  .author-section {
+    margin-top: 32px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 8px;
+  }
+
+  .author-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+    display: block;
+  }
+
+  .author-info {
+    margin-bottom: 16px;
+  }
+
+  .author-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 4px;
+  }
+
+  .author-link {
+    font-size: 13px;
+    color: #2C5D88;
+    text-decoration: underline;
+    text-decoration-color: rgba(94, 129, 172, 0.4);
+    transition: text-decoration-color 0.2s ease;
+  }
+
+  .author-link:hover {
+    text-decoration-color: #5E81AC;
+  }
+
+  /* Table of Contents */
+  .toc-section {
+    margin-top: 32px;
+    padding-top: 24px;
+  }
+
+  .toc-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    font-weight: 600;
+    display: block;
+  }
+
+  .toc-list {
+    list-style: none;
+    margin: 0 0 0 6px;
+    padding: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    border-left: 1px solid rgba(94, 129, 172, 0.2);
+  }
+
+  :global(.toc-list li) {
+    margin-bottom: 12px;
+  }
+
+  :global(.toc-list a) {
+    display: block;
+    padding-left: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    left: -1px;
+    border-left: 2px solid transparent;
+  }
+
+  :global(.toc-list a:hover) {
+    color: #5E81AC;
+    border-left-color: rgba(94, 129, 172, 0.5);
+  }
+
+  :global(.toc-list a.active) {
+    color: #1A4B75;
+    font-weight: 600;
+    border-left-color: #5E81AC;
+  }
+
+  :global(.toc-list li.toc-h3 a) {
+    font-size: 12.5px;
+    padding-left: 24px;
+  }
+
+  /* Back to Top Button */
+  .back-to-top {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, background 0.2s ease;
+    font-size: 18px;
+    z-index: 999;
+  }
+
+  .back-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .back-to-top:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  article.post-article-body {
+    font-size: 17px;
+    line-height: 1.86;
+    color: #2f3640;
+    max-width: 68ch;
+  }
+
+  .ai-notice {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 40px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #2f3640;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ai-notice-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .ai-notice-content {
+    flex: 1;
+  }
+
+  .ai-notice-title {
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .ai-notice-desc {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .gravity-orb {
+    position: fixed;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 40;
+    border: 1px solid rgba(94, 129, 172, 0.85);
+    background: radial-gradient(circle, rgba(94, 129, 172, 0.85), rgba(94, 129, 172, 0.14));
+    box-shadow: 0 0 24px rgba(94, 129, 172, 0.35);
+    transform: translate(-50%, -50%);
+  }
+
+  :global(article h2) {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 40px;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  :global(article h3) {
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+
+  :global(article p) {
+    margin-bottom: 16px;
+    text-wrap: pretty;
+  }
+
+  :global(article :not(pre) > code) {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: rgba(94, 129, 172, 0.12);
+    color: #274C77;
+    border: 1px solid rgba(94, 129, 172, 0.25);
+    word-break: break-word;
+    font-weight: 500;
+  }
+
+  :global(.code-block-wrapper) {
+    position: relative;
+    margin: 28px 0;
+    border-radius: 8px;
+    border: 1px solid #D8DEE9;
+    background-color: #ECEFF4;
+    box-shadow: 0 4px 16px rgba(46, 52, 64, 0.08), 0 1px 3px rgba(46, 52, 64, 0.04);
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  :global(article pre) {
+    margin: 28px 0;
+    padding: 16px 18px 12px !important;
+    border-radius: 8px;
+    border: 1px solid #D8DEE9;
+    background-color: #ECEFF4 !important;
+    box-shadow: 0 4px 16px rgba(46, 52, 64, 0.08), 0 1px 3px rgba(46, 52, 64, 0.04);
+    overflow-x: auto;
+    max-width: 100%;
+    display: block;
+    box-sizing: border-box;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.75;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scrollbar-width: thin !important;
+    scrollbar-color: #BAC3D2 #ECEFF4 !important;
+  }
+
+  :global(article pre::-webkit-scrollbar) {
+    display: block !important;
+    height: 8px !important;
+  }
+
+  :global(article pre::-webkit-scrollbar-track) {
+    display: block !important;
+    background: #ECEFF4 !important;
+    border-radius: 0 0 8px 8px !important;
+  }
+
+  :global(article pre::-webkit-scrollbar-thumb) {
+    display: block !important;
+    background: #BAC3D2 !important;
+    border-radius: 4px !important;
+    border: 2px solid #ECEFF4 !important;
+    transition: background 0.2s ease !important;
+  }
+
+  :global(article pre::-webkit-scrollbar-thumb:hover) {
+    background: #8892B0 !important;
+  }
+
+  :global(.code-block-wrapper pre) {
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+  }
+
+  :global(article pre code) {
+    display: block;
+    width: fit-content;
+    min-width: 100%;
+    background-color: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: 500;
+    color: #2E3440;
+  }
+
+  :global(article pre code span) {
+    font-family: inherit;
+    font-weight: 500;
+  }
+
+  :global(.code-toolbar) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 38px;
+    padding: 0 14px;
+    background: #E5E9F0;
+    border-bottom: 1px solid #D8DEE9;
+    user-select: none;
+    box-sizing: border-box;
+  }
+
+  :global(.code-lang-badge) {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #434C5E;
+    background: rgba(46, 52, 64, 0.07);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(46, 52, 64, 0.08);
+  }
+
+  :global(.code-copy-btn) {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    font-size: 11.5px;
+    font-family: var(--font-sans);
+    background: #ECEFF4;
+    border: 1px solid #D8DEE9;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #434C5E;
+    box-shadow: 0 1px 2px rgba(46, 52, 64, 0.05);
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+
+  :global(.code-copy-btn:hover) {
+    background: #FFFFFF;
+    color: #2E3440;
+    border-color: #5E81AC;
+    box-shadow: 0 2px 5px rgba(46, 52, 64, 0.1);
+  }
+
+  :global(.code-copy-btn.copied) {
+    background: #E5F2E9;
+    border-color: #A3BE8C;
+    color: #2D6A4F;
+  }
+
+  :global(article ul),
+  :global(article ol) {
+    margin-left: 24px;
+    margin-bottom: 16px;
+  }
+
+  :global(article li) {
+    margin-bottom: 8px;
+    display: inline-block;
+    width: 100%;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+  }
+
+  :global(article blockquote) {
+    border-left: 3px solid #5E81AC;
+    padding: 14px 16px;
+    margin-left: 0;
+    margin-bottom: 20px;
+    margin-top: 0;
+    color: #4b5563;
+    font-style: normal;
+    background: rgba(94, 129, 172, 0.08);
+    border-top: 1px solid rgba(94, 129, 172, 0.2);
+    border-bottom: 1px solid rgba(94, 129, 172, 0.2);
+    position: relative;
+  }
+
+  :global(article blockquote)::before {
+    content: '💡 提示';
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #2f3640;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  :global(article blockquote p) {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  :global(article blockquote p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Post Navigation Cards */
+  .post-nav-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 48px 0 24px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .post-nav-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #ffffff;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+  }
+
+  .post-nav-card:hover {
+    border-color: rgba(94, 129, 172, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(94, 129, 172, 0.08);
+  }
+
+  .post-nav-card.next-card {
+    text-align: right;
+  }
+
+  .nav-direction {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .nav-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-main);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .post-nav-card.empty-card {
+    border: none;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .post-footer {
+    margin-top: 48px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+
+  .footer-links {
+    margin-bottom: 12px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .footer-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .footer-links a:hover {
+    color: var(--text-main);
+  }
+
+  .footer-desc {
+    font-size: 0.8rem;
+    margin-top: 12px;
+  }
+
+  @media (max-width: 1024px) {
+    .content-grid {
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+    .toc-aside {
+      display: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .post-page-content {
+      padding: 20px 0 40px;
+    }
+
+    .post-banner {
+      margin-bottom: 22px;
+    }
+
+    .post-main-title {
+      font-size: 24px;
+    }
+
+    .content-grid {
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .post-aside {
+      position: static;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 14px;
+    }
+
+    .tags {
+      flex-direction: row;
+      gap: 8px 14px;
+    }
+
+    :global(article h2) {
+      font-size: 20px;
+    }
+
+    .back-to-top {
+      bottom: 20px;
+      right: 20px;
+      width: 36px;
+      height: 36px;
+      font-size: 16px;
+    }
+
+    .toc-section {
+      display: none;
+    }
+  }
+</style>
+

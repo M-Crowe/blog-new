@@ -113,141 +113,152 @@ const { items, theme = 'auto' } = Astro.props;
 
 <script is:inline define:vars={{ items }}>
   // @ts-nocheck
-  const initLightbox = () => {
-    const lightbox = document.getElementById('artbook-lightbox');
-    if (!lightbox) return;
+  (() => {
+    const initLightbox = () => {
+      const lightbox = document.getElementById('artbook-lightbox');
+      if (!lightbox) return;
 
-    let currentIndex = 0;
+      let currentIndex = 0;
 
-    const imgEl = document.getElementById('lightbox-image');
-    const volTitleEl = lightbox.querySelector('[data-lightbox-vol-title]');
-    const counterEl = lightbox.querySelector('[data-lightbox-counter]');
-    const plateEl = lightbox.querySelector('[data-folio-plate]');
-    const categoryEl = lightbox.querySelector('[data-folio-category]');
-    const titleEl = lightbox.querySelector('[data-folio-title]');
-    const subtitleEl = lightbox.querySelector('[data-folio-subtitle]');
-    const placeEl = lightbox.querySelector('[data-folio-place]');
-    const dateEl = lightbox.querySelector('[data-folio-date]');
-    const storyEl = lightbox.querySelector('[data-folio-story]');
-    const exifWrap = lightbox.querySelector('[data-folio-exif-wrap]');
-    const exifCamera = lightbox.querySelector('[data-exif-camera]');
-    const exifLens = lightbox.querySelector('[data-exif-lens]');
-    const exifFocal = lightbox.querySelector('[data-exif-focal]');
-    const exifAperture = lightbox.querySelector('[data-exif-aperture]');
-    const exifShutter = lightbox.querySelector('[data-exif-shutter]');
-    const exifIso = lightbox.querySelector('[data-exif-iso]');
+      const imgEl = document.getElementById('lightbox-image');
+      const volTitleEl = lightbox.querySelector('[data-lightbox-vol-title]');
+      const counterEl = lightbox.querySelector('[data-lightbox-counter]');
+      const plateEl = lightbox.querySelector('[data-folio-plate]');
+      const categoryEl = lightbox.querySelector('[data-folio-category]');
+      const titleEl = lightbox.querySelector('[data-folio-title]');
+      const subtitleEl = lightbox.querySelector('[data-folio-subtitle]');
+      const placeEl = lightbox.querySelector('[data-folio-place]');
+      const dateEl = lightbox.querySelector('[data-folio-date]');
+      const storyEl = lightbox.querySelector('[data-folio-story]');
+      const exifWrap = lightbox.querySelector('[data-folio-exif-wrap]');
+      const exifCamera = lightbox.querySelector('[data-exif-camera]');
+      const exifLens = lightbox.querySelector('[data-exif-lens]');
+      const exifFocal = lightbox.querySelector('[data-exif-focal]');
+      const exifAperture = lightbox.querySelector('[data-exif-aperture]');
+      const exifShutter = lightbox.querySelector('[data-exif-shutter]');
+      const exifIso = lightbox.querySelector('[data-exif-iso]');
 
-    const renderItem = (index) => {
-      if (index < 0 || index >= items.length) return;
-      currentIndex = index;
-      const item = items[index];
+      const renderItem = (index) => {
+        if (index < 0 || index >= items.length) return;
+        currentIndex = index;
+        const item = items[index];
 
-      if (imgEl) {
-        imgEl.src = item.image;
-        imgEl.alt = item.title;
-      }
-      if (volTitleEl) {
-        volTitleEl.textContent = item.volumeName || '摄影画集';
-      }
-      if (counterEl) {
-        counterEl.textContent = `${(index + 1).toString().padStart(2, '0')} / ${items.length.toString().padStart(2, '0')}`;
-      }
-      if (plateEl) plateEl.textContent = item.plateNumber || `№ ${(index + 1).toString().padStart(2, '0')}`;
-      if (categoryEl) categoryEl.textContent = item.category;
-      if (titleEl) titleEl.textContent = item.title;
-      if (subtitleEl) {
-        subtitleEl.textContent = item.subtitle || item.overlayTitle || '';
-        subtitleEl.style.display = item.subtitle || item.overlayTitle ? 'block' : 'none';
-      }
-      if (placeEl) placeEl.textContent = `⌖ ${item.place}`;
-      if (dateEl) dateEl.textContent = item.dateLabel;
-      if (storyEl) storyEl.textContent = item.story || item.readme || '暂无随笔。';
+        if (imgEl) {
+          imgEl.src = item.image;
+          imgEl.alt = item.title;
+        }
+        if (volTitleEl) {
+          volTitleEl.textContent = item.volumeName || '摄影画集';
+        }
+        if (counterEl) {
+          counterEl.textContent = `${(index + 1).toString().padStart(2, '0')} / ${items.length.toString().padStart(2, '0')}`;
+        }
+        if (plateEl) plateEl.textContent = item.plateNumber || `№ ${(index + 1).toString().padStart(2, '0')}`;
+        if (categoryEl) categoryEl.textContent = item.category;
+        if (titleEl) titleEl.textContent = item.title;
+        if (subtitleEl) {
+          subtitleEl.textContent = item.subtitle || item.overlayTitle || '';
+          subtitleEl.style.display = item.subtitle || item.overlayTitle ? 'block' : 'none';
+        }
+        if (placeEl) placeEl.textContent = `⌖ ${item.place}`;
+        if (dateEl) dateEl.textContent = item.dateLabel;
+        if (storyEl) storyEl.textContent = item.story || item.readme || '暂无随笔。';
 
-      if (item.exif) {
-        if (exifWrap) exifWrap.style.display = 'block';
-        if (exifCamera) exifCamera.textContent = item.exif.camera || '-';
-        if (exifLens) exifLens.textContent = item.exif.lens || '-';
-        if (exifFocal) exifFocal.textContent = item.exif.focalLength || '-';
-        if (exifAperture) exifAperture.textContent = item.exif.aperture || '-';
-        if (exifShutter) exifShutter.textContent = item.exif.shutter || '-';
-        if (exifIso) exifIso.textContent = item.exif.iso || '-';
-      } else if (exifWrap) {
-        exifWrap.style.display = 'none';
-      }
-    };
+        if (item.exif) {
+          if (exifWrap) exifWrap.style.display = 'block';
+          if (exifCamera) exifCamera.textContent = item.exif.camera || '-';
+          if (exifLens) exifLens.textContent = item.exif.lens || '-';
+          if (exifFocal) exifFocal.textContent = item.exif.focalLength || '-';
+          if (exifAperture) exifAperture.textContent = item.exif.aperture || '-';
+          if (exifShutter) exifShutter.textContent = item.exif.shutter || '-';
+          if (exifIso) exifIso.textContent = item.exif.iso || '-';
+        } else if (exifWrap) {
+          exifWrap.style.display = 'none';
+        }
+      };
 
-    const openLightbox = (index) => {
-      renderItem(index);
-      lightbox.removeAttribute('hidden');
-      document.body.style.overflow = 'hidden';
-      requestAnimationFrame(() => {
-        lightbox.classList.add('is-open');
+      const openLightbox = (index) => {
+        renderItem(index);
+        lightbox.removeAttribute('hidden');
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(() => {
+          lightbox.classList.add('is-open');
+        });
+      };
+
+      const closeLightbox = () => {
+        lightbox.classList.remove('is-open');
+        setTimeout(() => {
+          lightbox.setAttribute('hidden', '');
+          document.body.style.overflow = '';
+        }, 250);
+      };
+
+      const nextItem = () => {
+        const nextIndex = (currentIndex + 1) % items.length;
+        renderItem(nextIndex);
+      };
+
+      const prevItem = () => {
+        const prevIndex = (currentIndex - 1 + items.length) % items.length;
+        renderItem(prevIndex);
+      };
+
+      // Close buttons & backdrop
+      lightbox.querySelectorAll('[data-lightbox-close]').forEach((el) => {
+        el.onclick = closeLightbox;
       });
-    };
 
-    const closeLightbox = () => {
-      lightbox.classList.remove('is-open');
-      setTimeout(() => {
-        lightbox.setAttribute('hidden', '');
-        document.body.style.overflow = '';
-      }, 250);
-    };
+      const nextBtn = lightbox.querySelector('[data-lightbox-next]');
+      if (nextBtn) nextBtn.onclick = nextItem;
 
-    const nextItem = () => {
-      const nextIndex = (currentIndex + 1) % items.length;
-      renderItem(nextIndex);
-    };
+      const prevBtn = lightbox.querySelector('[data-lightbox-prev]');
+      if (prevBtn) prevBtn.onclick = prevItem;
 
-    const prevItem = () => {
-      const prevIndex = (currentIndex - 1 + items.length) % items.length;
-      renderItem(prevIndex);
-    };
-
-    // Close buttons & backdrop
-    lightbox.querySelectorAll('[data-lightbox-close]').forEach((el) => {
-      el.addEventListener('click', closeLightbox);
-    });
-
-    lightbox.querySelector('[data-lightbox-next]')?.addEventListener('click', nextItem);
-    lightbox.querySelector('[data-lightbox-prev]')?.addEventListener('click', prevItem);
-
-    // Keyboard support
-    window.addEventListener('keydown', (e) => {
-      if (lightbox.hasAttribute('hidden') || !lightbox.classList.contains('is-open')) return;
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowRight') nextItem();
-      if (e.key === 'ArrowLeft') prevItem();
-    });
-
-    // Expose open trigger to global window
-    window.openArtBookLightbox = (idOrIndex) => {
-      if (typeof idOrIndex === 'number') {
-        openLightbox(idOrIndex);
-      } else {
-        const found = items.findIndex((it) => it.id === idOrIndex);
-        openLightbox(found >= 0 ? found : 0);
+      // Keyboard support
+      if (window._lightboxKeyHandler) {
+        window.removeEventListener('keydown', window._lightboxKeyHandler);
       }
-    };
-  };
+      window._lightboxKeyHandler = (e) => {
+        if (lightbox.hasAttribute('hidden') || !lightbox.classList.contains('is-open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') nextItem();
+        if (e.key === 'ArrowLeft') prevItem();
+      };
+      window.addEventListener('keydown', window._lightboxKeyHandler);
 
-  // Delegated click handler for opening lightbox
-  document.addEventListener('click', (e) => {
-    const trigger = e.target.closest('[data-open-artbook]');
-    if (trigger) {
-      e.preventDefault();
-      const targetId = trigger.getAttribute('data-open-artbook');
-      if (window.openArtBookLightbox) {
-        window.openArtBookLightbox(targetId);
-      }
+      // Expose open trigger to global window
+      window.openArtBookLightbox = (idOrIndex) => {
+        if (typeof idOrIndex === 'number') {
+          openLightbox(idOrIndex);
+        } else {
+          const found = items.findIndex((it) => it.id === idOrIndex);
+          openLightbox(found >= 0 ? found : 0);
+        }
+      };
+    };
+
+    if (!window._lightboxClickRegistered) {
+      window._lightboxClickRegistered = true;
+      document.addEventListener('click', (e) => {
+        const trigger = e.target.closest('[data-open-artbook]');
+        if (trigger) {
+          e.preventDefault();
+          const targetId = trigger.getAttribute('data-open-artbook');
+          if (window.openArtBookLightbox) {
+            window.openArtBookLightbox(targetId);
+          }
+        }
+      });
     }
-  });
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLightbox);
-  } else {
-    initLightbox();
-  }
-  document.addEventListener('astro:page-load', initLightbox);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLightbox);
+    } else {
+      initLightbox();
+    }
+    document.addEventListener('astro:page-load', initLightbox);
+  })();
 </script>
 
 <style>
