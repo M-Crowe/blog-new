@@ -87,4 +87,22 @@ const isActive = (href: string) => {
     color: #2C2C2C;
     font-weight: 600;
   }
+
+  /* Dark Theme Support (e.g. Gallery Exhibition Mode) */
+  :global(body.dark-gallery) .site-header {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  :global(body.dark-gallery) .site-brand a {
+    color: #f0f0f2;
+  }
+
+  :global(body.dark-gallery) .site-nav a {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  :global(body.dark-gallery) .site-nav a:hover,
+  :global(body.dark-gallery) .site-nav a.active {
+    color: #ffffff;
+  }
 </style>

@@ -1,379 +1,546 @@
 ---
 import type { ArtVolume, GalleryItem } from '../data/galleryItems';
 import BookLightbox from './BookLightbox.astro';
+import { siteConfig } from '../lib/config';
 
 interface Props {
   volumes?: ArtVolume[];
   volume?: ArtVolume;
   items?: GalleryItem[];
   showVolumeHeader?: boolean;
+  theme?: 'dark' | 'light';
 }
 
-const { volumes, volume, items: propsItems, showVolumeHeader = true } = Astro.props;
+const { volumes, volume, items: propsItems, showVolumeHeader = true, theme = 'dark' } = Astro.props;
 
 const effectiveVolumes = volumes && volumes.length > 0
   ? volumes
   : (volume ? [volume] : []);
 
 const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
-
-// 依据用户指定规则将相册切分为不同的行：
-// 1个 -> 1行1个
-// 2个 -> 1行2个
-// 3个 -> 1行3个
-// 4个 -> 2行，每行2个
-// 5个 -> 上面1行2个，下面1行3个
-const getVolumeRows = (items: GalleryItem[]): GalleryItem[][] => {
-  const count = items.length;
-  if (count <= 3) {
-    return [items];
-  }
-  if (count === 4) {
-    return [items.slice(0, 2), items.slice(2, 4)];
-  }
-  if (count === 5) {
-    return [items.slice(0, 2), items.slice(2, 5)];
-  }
-  
-  const rows: GalleryItem[][] = [];
-  let idx = 0;
-  while (idx < count) {
-    const remaining = count - idx;
-    if (remaining === 5) {
-      rows.push(items.slice(idx, idx + 2));
-      rows.push(items.slice(idx + 2, idx + 5));
-      break;
-    } else if (remaining === 4) {
-      rows.push(items.slice(idx, idx + 2));
-      rows.push(items.slice(idx + 2, idx + 4));
-      break;
-    } else if (remaining === 2) {
-      rows.push(items.slice(idx, idx + 2));
-      break;
-    } else {
-      const take = Math.min(3, remaining);
-      rows.push(items.slice(idx, idx + take));
-      idx += take;
-    }
-  }
-  return rows;
-};
 ---
 
-<div class="artbook-spread-wrapper">
-  {effectiveVolumes.map((vol) => {
-    const rows = getVolumeRows(vol.items);
+<div class={`gallery-wall-wrapper theme-${theme}`} id="gallery-wall-root">
+  <!-- Gallery Header (Matching Reference Screenshot) -->
+  <header class="gallery-main-header">
+    <div class="header-left">
+      <h1 class="gallery-title">画廊</h1>
+      <span class="gallery-author">by {siteConfig.author.name || 'M.Crowe'}</span>
+    </div>
 
-    return (
-      <article class="volume-container" data-volume-id={vol.volId}>
+    <div class="header-right">
+      <button class="fullscreen-toggle-btn" id="gallery-fullscreen-btn" type="button" aria-label="全屏展示 (F11)" title="全屏展示">
+        <svg class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+        </svg>
+        <svg class="icon-compress" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Volume Selector / Filter Tabs -->
+  {effectiveVolumes.length > 1 && (
+    <div class="volume-nav-row">
+      <div class="volume-tabs" role="tablist" aria-label="画册专题切换">
+        <button class="vol-tab is-active" type="button" data-volume-tab="all" role="tab" aria-selected="true">
+          全部画作 ({allItems.length})
+        </button>
+        {effectiveVolumes.map((vol) => (
+          <button class="vol-tab" type="button" data-volume-tab={vol.volId} role="tab" aria-selected="false">
+            {vol.title.split('·')[0].trim()} ({vol.items.length})
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Volumes and Seamless Photo Grids -->
+  <div class="volumes-container">
+    {effectiveVolumes.map((vol) => (
+      <section class="volume-section" data-volume-section={vol.volId}>
         {showVolumeHeader && (
-          <header class="artbook-prologue">
-            <div class="prologue-spine">
-              <span class="spine-badge">{vol.volNumber}</span>
-              <span class="spine-edition">COLLECTION · {vol.year}</span>
+          <div class="volume-intro-banner">
+            <div class="vol-banner-left">
+              <span class="vol-badge">{vol.volNumber} · {vol.year}</span>
+              <h2 class="vol-heading">{vol.title}</h2>
+              {vol.subtitle && <p class="vol-subheading">{vol.subtitle}</p>}
             </div>
-            <div class="prologue-main">
-              <h2 class="prologue-title">{vol.title}</h2>
-              <p class="prologue-subtitle">{vol.subtitle}</p>
-              <div class="prologue-note">
-                <p>{vol.curatorNote}</p>
-              </div>
+            <div class="vol-banner-right">
+              <p class="vol-curator-note">{vol.curatorNote}</p>
             </div>
-            <div class="prologue-meta">
-              <div class="meta-item">
-                <span class="meta-label">收录作品</span>
-                <span class="meta-value">{vol.items.length} 帧切片</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-label">装帧格式</span>
-                <span class="meta-value">Lookbook Monograph</span>
-              </div>
-            </div>
-          </header>
+          </div>
         )}
 
-        <div class="artbook-gallery">
-          {rows.map((row) => (
-            <div class={`spread-row grid-${row.length}`}>
-              {row.map((item) => (
-                <article class="gallery-card" data-open-artbook={item.id} title={`${item.title} · 点击展卷查看大图与拍摄详情`}>
-                  <div class="card-media">
-                    <img src={item.image} alt={item.title} class="card-image" loading="lazy" />
-                    <div class="card-hover-overlay">
-                      <span class="hover-plate">{item.plateNumber}</span>
-                      <span class="hover-action">展卷详情 ↗</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+        <!-- 5-Column Seamless Photo Grid Wall (No text below images) -->
+        <div class="gallery-photo-grid">
+          {vol.items.map((item) => (
+            <article
+              class="photo-tile"
+              data-open-artbook={item.id}
+              data-volume-item={vol.volId}
+              title={`${item.title} · 点击展卷查看大图与拍摄详情`}
+            >
+              <img
+                src={item.image}
+                alt={item.title}
+                class="tile-image"
+                loading="lazy"
+              />
+              <div class="tile-hover-mask">
+                <span class="tile-plate-tag">{item.plateNumber}</span>
+                <span class="tile-view-action">展卷 ↗</span>
+              </div>
+            </article>
           ))}
         </div>
-      </article>
-    );
-  })}
+      </section>
+    ))}
+  </div>
 
   <!-- Fullscreen Book Lightbox -->
   <BookLightbox items={allItems} />
 </div>
 
+<script>
+  // @ts-nocheck
+  const setupGalleryWall = () => {
+    const root = document.getElementById('gallery-wall-root');
+    if (!root) return;
+
+    // 1. Fullscreen Toggle API
+    const fsBtn = document.getElementById('gallery-fullscreen-btn');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch((err) => {
+            console.warn('Fullscreen request failed:', err);
+          });
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        }
+      });
+
+      const onFsChange = () => {
+        const isFs = !!document.fullscreenElement;
+        fsBtn.classList.toggle('is-fullscreen', isFs);
+      };
+
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.addEventListener('fullscreenchange', onFsChange);
+    }
+
+    // 2. Volume Filter Tabs Switching
+    const tabs = Array.from(root.querySelectorAll('[data-volume-tab]'));
+    const sections = Array.from(root.querySelectorAll('[data-volume-section]'));
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const targetVol = tab.getAttribute('data-volume-tab');
+        if (!targetVol) return;
+
+        tabs.forEach((t) => {
+          const active = t.getAttribute('data-volume-tab') === targetVol;
+          t.classList.toggle('is-active', active);
+          t.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+
+        sections.forEach((sec) => {
+          const secVolId = sec.getAttribute('data-volume-section');
+          if (targetVol === 'all' || secVolId === targetVol) {
+            sec.removeAttribute('hidden');
+            sec.style.display = 'block';
+          } else {
+            sec.setAttribute('hidden', '');
+            sec.style.display = 'none';
+          }
+        });
+      });
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupGalleryWall);
+  } else {
+    setupGalleryWall();
+  }
+  document.addEventListener('astro:page-load', setupGalleryWall);
+</script>
+
 <style>
-  .artbook-spread-wrapper {
+  .gallery-wall-wrapper {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* Dark Theme Default */
+  .gallery-wall-wrapper.theme-dark {
+    color: #f0f0f2;
+  }
+
+  /* Gallery Main Header (Matching Reference Screenshot) */
+  .gallery-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 0 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .gallery-main-header {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .gallery-title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: inherit;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .gallery-author {
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.04em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .gallery-author {
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .fullscreen-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: inherit;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .fullscreen-toggle-btn {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #2c2c2c;
+  }
+
+  .fullscreen-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: scale(1.05);
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .fullscreen-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .icon-compress {
+    display: none;
+  }
+
+  .fullscreen-toggle-btn.is-fullscreen .icon-expand {
+    display: none;
+  }
+
+  .fullscreen-toggle-btn.is-fullscreen .icon-compress {
+    display: block;
+  }
+
+  /* Volume Filter Tabs */
+  .volume-nav-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+
+  .volume-nav-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .volume-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .volume-tabs {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .vol-tab {
+    background: transparent;
+    border: 0;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-tab {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .vol-tab:hover {
+    color: #ffffff;
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-tab:hover {
+    color: #000000;
+  }
+
+  .vol-tab.is-active {
+    background: #ffffff;
+    color: #0f1115;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-tab.is-active {
+    background: #111111;
+    color: #ffffff;
+  }
+
+  /* Volumes Container & Intro Banner */
+  .volumes-container {
     display: flex;
     flex-direction: column;
     gap: 48px;
   }
 
-  /* Master Volume Card (包裹卷首信息与旗下所有作品画幅的大卡片) */
-  .volume-container {
-    background: #ffffff;
-    border: 1px solid #eaeaea;
-    border-radius: 18px;
-    padding: 36px 36px 40px;
+  .volume-section {
     display: flex;
     flex-direction: column;
-    gap: 32px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.025);
+    gap: 20px;
   }
 
-  /* Prologue / Book Spine inside Volume Card */
-  .artbook-prologue {
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid #f0f0f2;
-    border-radius: 0;
-    padding: 0 0 28px 0;
+  .volume-intro-banner {
     display: grid;
-    grid-template-columns: 180px 1fr 180px;
-    gap: 32px;
-    align-items: start;
-    box-shadow: none;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr);
+    gap: 28px;
+    align-items: center;
+    padding: 22px 26px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
   }
 
-  .prologue-spine {
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .volume-intro-banner {
+    background: #ffffff;
+    border-color: #eaeaea;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+  }
+
+  .vol-banner-left {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
   }
 
-  .spine-badge {
-    display: inline-block;
-    width: fit-content;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    background: #111;
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 4px;
+  .vol-badge {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  }
-
-  .spine-edition {
     font-size: 0.72rem;
-    letter-spacing: 0.1em;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #5E81AC;
     text-transform: uppercase;
-    color: #888;
-    line-height: 1.4;
   }
 
-  .prologue-main {
-    border-left: 1px solid #f0f0f0;
-    border-right: 1px solid #f0f0f0;
-    padding: 0 32px;
-  }
-
-  .prologue-title {
-    font-size: 1.7rem;
+  .vol-heading {
+    font-size: 1.35rem;
     font-weight: 600;
-    letter-spacing: -0.03em;
-    color: #1a1a1a;
-    margin: 0 0 6px;
-  }
-
-  .prologue-subtitle {
-    font-size: 0.88rem;
-    color: #777;
-    margin: 0 0 14px;
-    letter-spacing: 0.02em;
-  }
-
-  .prologue-note p {
-    font-size: 0.92rem;
-    line-height: 1.7;
-    color: #444;
+    letter-spacing: -0.02em;
+    color: inherit;
     margin: 0;
   }
 
-  .prologue-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  .vol-subheading {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0;
   }
 
-  .meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-subheading {
+    color: rgba(0, 0, 0, 0.5);
   }
 
-  .meta-label {
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    color: #999;
-    text-transform: uppercase;
+  .vol-banner-right {
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 24px;
   }
 
-  .meta-value {
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-banner-right {
+    border-left-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .vol-curator-note {
     font-size: 0.88rem;
-    font-weight: 500;
-    color: #222;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
   }
 
-  /* Gallery Grid Rows */
-  .artbook-gallery {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-curator-note {
+    color: #4b5563;
   }
 
-  .spread-row {
+  /* 5-Column Seamless Photo Grid Wall */
+  .gallery-photo-grid {
     display: grid;
-    gap: 24px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+    background: #000000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
     width: 100%;
   }
 
-  .spread-row.grid-1 {
-    grid-template-columns: 1fr;
+  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .gallery-photo-grid {
+    background: #eaeaea;
+    border-color: #dcdcdc;
   }
 
-  .spread-row.grid-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .spread-row.grid-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .gallery-card {
-    background: #f0f0f2;
-    border: 1px solid #e5e5e8;
-    border-radius: 12px;
+  .photo-tile {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
     cursor: pointer;
+    background: #181a20;
     display: block;
-    position: relative;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.2s ease;
+    margin: 0;
+    padding: 0;
   }
 
-  .gallery-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.09);
-    border-color: #cccccc;
-  }
-
-  .card-media {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    background: #f0f0f2;
-    overflow: hidden;
-    display: block;
-  }
-
-  .grid-1 .card-media {
-    aspect-ratio: 16 / 9;
-  }
-
-  .card-image {
+  .tile-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+    user-select: none;
+    -webkit-user-drag: none;
   }
 
-  .gallery-card:hover .card-image {
-    transform: scale(1.04);
+  .photo-tile:hover .tile-image {
+    transform: scale(1.06);
+    filter: brightness(1.05);
   }
 
-  .card-hover-overlay {
+  .tile-hover-mask {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.5) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.6) 100%);
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.24s ease;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 16px;
+    padding: 12px;
     color: #ffffff;
     pointer-events: none;
   }
 
-  .gallery-card:hover .card-hover-overlay {
+  .photo-tile:hover .tile-hover-mask {
     opacity: 1;
   }
 
-  .hover-plate {
+  .tile-plate-tag {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 700;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     letter-spacing: 0.06em;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    padding: 3px 8px;
+    padding: 3px 7px;
     border-radius: 4px;
+    color: #ffffff;
   }
 
-  .hover-action {
-    font-size: 0.78rem;
+  .tile-view-action {
+    font-size: 0.74rem;
     background: rgba(255, 255, 255, 0.28);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    padding: 4px 12px;
+    padding: 3px 10px;
     border-radius: 999px;
+    color: #ffffff;
     font-weight: 500;
   }
 
-  /* Responsive */
-  @media (max-width: 960px) {
-    .volume-container {
-      padding: 24px 20px 28px;
-      gap: 24px;
+  /* Responsive Breakpoints */
+  @media (max-width: 1100px) {
+    .gallery-photo-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
-    .artbook-prologue {
+    .volume-intro-banner {
       grid-template-columns: 1fr;
-      gap: 18px;
-      padding-bottom: 22px;
+      gap: 16px;
     }
-    .prologue-main {
+    .vol-banner-right {
       border-left: 0;
-      border-right: 0;
-      padding: 14px 0;
-      border-top: 1px solid #f0f0f0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .prologue-meta {
-      flex-direction: row;
-      gap: 24px;
-    }
-    .spread-row.grid-3 {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-left: 0;
+      padding-top: 14px;
     }
   }
 
-  @media (max-width: 640px) {
-    .volume-container {
-      padding: 18px 16px 22px;
-      gap: 20px;
-      border-radius: 14px;
+  @media (max-width: 768px) {
+    .gallery-photo-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2px;
     }
-    .spread-row.grid-2,
-    .spread-row.grid-3 {
-      grid-template-columns: 1fr;
+    .gallery-title {
+      font-size: 1.6rem;
+    }
+    .volume-intro-banner {
+      padding: 16px 18px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .gallery-photo-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .gallery-main-header {
+      padding: 16px 0 12px;
     }
   }
 </style>
