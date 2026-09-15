@@ -8,114 +8,198 @@ interface Props {
   volume?: ArtVolume;
   items?: GalleryItem[];
   showVolumeHeader?: boolean;
-  theme?: 'dark' | 'light';
+  mode?: 'album' | 'wall';
 }
 
-const { volumes, volume, items: propsItems, showVolumeHeader = true, theme = 'dark' } = Astro.props;
+const {
+  volumes,
+  volume,
+  items: propsItems,
+  showVolumeHeader = true,
+  mode = 'album',
+} = Astro.props;
 
 const effectiveVolumes = volumes && volumes.length > 0
   ? volumes
   : (volume ? [volume] : []);
 
 const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
+
+// 首页相册模式：依据作品数量智能切分行排版（1幅全宽、2幅并排、3幅并排、4幅2x2、5幅2+3）
+const getVolumeRows = (items: GalleryItem[]): GalleryItem[][] => {
+  const count = items.length;
+  if (count <= 3) {
+    return [items];
+  }
+  if (count === 4) {
+    return [items.slice(0, 2), items.slice(2, 4)];
+  }
+  if (count === 5) {
+    return [items.slice(0, 2), items.slice(2, 5)];
+  }
+
+  const rows: GalleryItem[][] = [];
+  let idx = 0;
+  while (idx < count) {
+    const remaining = count - idx;
+    if (remaining === 5) {
+      rows.push(items.slice(idx, idx + 2));
+      rows.push(items.slice(idx + 2, idx + 5));
+      break;
+    } else if (remaining === 4) {
+      rows.push(items.slice(idx, idx + 2));
+      rows.push(items.slice(idx + 2, idx + 4));
+      break;
+    } else if (remaining === 2) {
+      rows.push(items.slice(idx, idx + 2));
+      break;
+    } else {
+      const take = Math.min(3, remaining);
+      rows.push(items.slice(idx, idx + take));
+      idx += take;
+    }
+  }
+  return rows;
+};
 ---
 
-<div class={`gallery-wall-wrapper theme-${theme}`} id="gallery-wall-root">
-  <!-- Gallery Header (Matching Reference Screenshot) -->
-  <header class="gallery-main-header">
-    <div class="header-left">
-      <h1 class="gallery-title">画廊</h1>
-      <span class="gallery-author">by {siteConfig.author.name || 'M.Crowe'}</span>
-    </div>
-
-    <div class="header-right">
-      <button class="fullscreen-toggle-btn" id="gallery-fullscreen-btn" type="button" aria-label="全屏展示 (F11)" title="全屏展示">
-        <svg class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-        </svg>
-        <svg class="icon-compress" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-        </svg>
-      </button>
-    </div>
-  </header>
-
-  <!-- Volume Selector / Filter Tabs -->
-  {effectiveVolumes.length > 1 && (
-    <div class="volume-nav-row">
-      <div class="volume-tabs" role="tablist" aria-label="画册专题切换">
-        <button class="vol-tab is-active" type="button" data-volume-tab="all" role="tab" aria-selected="true">
-          全部画作 ({allItems.length})
-        </button>
-        {effectiveVolumes.map((vol) => (
-          <button class="vol-tab" type="button" data-volume-tab={vol.volId} role="tab" aria-selected="false">
-            {vol.title.split('·')[0].trim()} ({vol.items.length})
-          </button>
-        ))}
+{mode === 'wall' ? (
+  <div class="gallery-wall-wrapper" id="gallery-wall-root">
+    <header class="gallery-main-header">
+      <div class="header-left">
+        <h1 class="gallery-title">画廊</h1>
+        <span class="gallery-author">by {siteConfig.author.name || 'M.Crowe'}</span>
       </div>
-    </div>
-  )}
 
-  <!-- Volumes and Seamless Photo Grids -->
-  <div class="volumes-container">
-    {effectiveVolumes.map((vol) => (
-      <section class="volume-section" data-volume-section={vol.volId}>
-        {showVolumeHeader && (
-          <div class="volume-intro-banner">
-            <div class="vol-banner-left">
-              <span class="vol-badge">{vol.volNumber} · {vol.year}</span>
-              <h2 class="vol-heading">{vol.title}</h2>
-              {vol.subtitle && <p class="vol-subheading">{vol.subtitle}</p>}
-            </div>
-            <div class="vol-banner-right">
-              <p class="vol-curator-note">{vol.curatorNote}</p>
-            </div>
-          </div>
-        )}
+      <div class="header-right">
+        <button class="fullscreen-toggle-btn" id="gallery-fullscreen-btn" type="button" aria-label="全屏展示 (F11)" title="全屏展示">
+          <svg class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+          <svg class="icon-compress" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
 
-        <!-- 5-Column Seamless Photo Grid Wall (No text below images) -->
-        <div class="gallery-photo-grid">
-          {vol.items.map((item) => (
-            <article
-              class="photo-tile"
-              data-open-artbook={item.id}
-              data-volume-item={vol.volId}
-              title={`${item.title} · 点击展卷查看大图与拍摄详情`}
-            >
-              <img
-                src={item.image}
-                alt={item.title}
-                class="tile-image"
-                loading="lazy"
-              />
-              <div class="tile-hover-mask">
-                <span class="tile-plate-tag">{item.plateNumber}</span>
-                <span class="tile-view-action">展卷 ↗</span>
-              </div>
-            </article>
+    {effectiveVolumes.length > 1 && (
+      <div class="volume-nav-row">
+        <div class="volume-tabs" role="tablist" aria-label="画册专题切换">
+          <button class="vol-tab is-active" type="button" data-volume-tab="all" role="tab" aria-selected="true">
+            全部画作 ({allItems.length})
+          </button>
+          {effectiveVolumes.map((vol) => (
+            <button class="vol-tab" type="button" data-volume-tab={vol.volId} role="tab" aria-selected="false">
+              {vol.title.split('·')[0].trim()} ({vol.items.length})
+            </button>
           ))}
         </div>
-      </section>
-    ))}
-  </div>
+      </div>
+    )}
 
-  <!-- Fullscreen Book Lightbox -->
-  <BookLightbox items={allItems} />
-</div>
+    <div class="volumes-wall-container">
+      {effectiveVolumes.map((vol) => (
+        <section class="wall-volume-section" data-volume-section={vol.volId}>
+          {showVolumeHeader && (
+            <div class="wall-intro-banner">
+              <div class="wall-banner-left">
+                <span class="wall-badge">{vol.volNumber} · {vol.year}</span>
+                <h2 class="wall-heading">{vol.title}</h2>
+                {vol.subtitle && <p class="wall-subheading">{vol.subtitle}</p>}
+              </div>
+              <div class="wall-banner-right">
+                <p class="wall-curator-note">{vol.curatorNote}</p>
+              </div>
+            </div>
+          )}
+
+          <div class="wall-photo-grid">
+            {vol.items.map((item) => (
+              <article
+                class="wall-photo-tile"
+                data-open-artbook={item.id}
+                title={`${item.title} · 点击展卷查看大图与拍摄详情`}
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  class="wall-tile-image"
+                  loading="lazy"
+                />
+                <div class="wall-tile-mask">
+                  <span class="wall-plate-tag">{item.plateNumber}</span>
+                  <span class="wall-view-action">展卷 ↗</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <BookLightbox items={allItems} />
+  </div>
+) : (
+  <div class="album-feed-wrapper">
+    {effectiveVolumes.map((vol) => {
+      const rows = getVolumeRows(vol.items);
+
+      return (
+        <article class="album-volume-card" data-volume-id={vol.volId}>
+          {showVolumeHeader && (
+            <header class="album-header">
+              <div class="album-header-left">
+                <span class="album-badge">{vol.volNumber} · {vol.year}</span>
+                <h3 class="album-title">{vol.title}</h3>
+                {vol.subtitle && <p class="album-subtitle">{vol.subtitle}</p>}
+              </div>
+              <div class="album-header-right">
+                <p class="album-note">{vol.curatorNote}</p>
+              </div>
+            </header>
+          )}
+
+          <!-- 当前图片布局样式（纯图片网格，下方完全无字） -->
+          <div class="album-grid-container">
+            {rows.map((row) => (
+              <div class={`album-row grid-${row.length}`}>
+                {row.map((item) => (
+                  <article
+                    class="album-photo-card"
+                    data-open-artbook={item.id}
+                    title={`${item.title} · 点击展卷查看大图与拍摄详情`}
+                  >
+                    <div class="album-photo-media">
+                      <img src={item.image} alt={item.title} class="album-photo-img" loading="lazy" />
+                      <div class="album-hover-mask">
+                        <span class="album-plate-num">{item.plateNumber}</span>
+                        <span class="album-view-btn">展卷详情 ↗</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ))}
+          </div>
+        </article>
+      );
+    })}
+
+    <BookLightbox items={allItems} />
+  </div>
+)}
 
 <script>
   // @ts-nocheck
-  const setupGalleryWall = () => {
-    const root = document.getElementById('gallery-wall-root');
-    if (!root) return;
-
-    // 1. Fullscreen Toggle API
+  const setupGalleryWallScript = () => {
+    // 1. Fullscreen Toggle
     const fsBtn = document.getElementById('gallery-fullscreen-btn');
     if (fsBtn) {
       fsBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
           document.documentElement.requestFullscreen().catch((err) => {
-            console.warn('Fullscreen request failed:', err);
+            console.warn('Fullscreen failed:', err);
           });
         } else {
           if (document.exitFullscreen) {
@@ -133,7 +217,10 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
       document.addEventListener('fullscreenchange', onFsChange);
     }
 
-    // 2. Volume Filter Tabs Switching
+    // 2. Volume Tab Switching
+    const root = document.getElementById('gallery-wall-root');
+    if (!root) return;
+
     const tabs = Array.from(root.querySelectorAll('[data-volume-tab]'));
     const sections = Array.from(root.querySelectorAll('[data-volume-section]'));
 
@@ -163,38 +250,32 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
   };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupGalleryWall);
+    document.addEventListener('DOMContentLoaded', setupGalleryWallScript);
   } else {
-    setupGalleryWall();
+    setupGalleryWallScript();
   }
-  document.addEventListener('astro:page-load', setupGalleryWall);
+  document.addEventListener('astro:page-load', setupGalleryWallScript);
 </script>
 
 <style>
+  /* =========================================================
+     模式一：独立画廊展厅（Wall 模式，参考图同款 5 列纯净平铺照片墙）
+     ========================================================= */
   .gallery-wall-wrapper {
     width: 100%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 32px;
-  }
-
-  /* Dark Theme Default */
-  .gallery-wall-wrapper.theme-dark {
     color: #f0f0f2;
   }
 
-  /* Gallery Main Header (Matching Reference Screenshot) */
   .gallery-main-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     padding: 24px 0 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  }
-
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .gallery-main-header {
-    border-bottom-color: rgba(0, 0, 0, 0.1);
   }
 
   .header-left {
@@ -204,10 +285,10 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
   }
 
   .gallery-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: inherit;
+    color: #ffffff;
     margin: 0;
     line-height: 1.2;
   }
@@ -219,10 +300,6 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .gallery-author {
-    color: rgba(0, 0, 0, 0.55);
-  }
-
   .header-right {
     display: flex;
     align-items: center;
@@ -232,7 +309,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
   .fullscreen-toggle-btn {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.16);
-    color: inherit;
+    color: #ffffff;
     width: 38px;
     height: 38px;
     border-radius: 8px;
@@ -243,19 +320,9 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     transition: all 0.2s ease;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .fullscreen-toggle-btn {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.12);
-    color: #2c2c2c;
-  }
-
   .fullscreen-toggle-btn:hover {
     background: rgba(255, 255, 255, 0.18);
     transform: scale(1.05);
-  }
-
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .fullscreen-toggle-btn:hover {
-    background: rgba(0, 0, 0, 0.08);
   }
 
   .icon-compress {
@@ -270,13 +337,12 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     display: block;
   }
 
-  /* Volume Filter Tabs */
   .volume-nav-row {
     display: flex;
     align-items: center;
     gap: 16px;
     overflow-x: auto;
-    padding-bottom: 6px;
+    padding-bottom: 4px;
     scrollbar-width: none;
   }
 
@@ -294,11 +360,6 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     border-radius: 999px;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .volume-tabs {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.08);
-  }
-
   .vol-tab {
     background: transparent;
     border: 0;
@@ -312,115 +373,82 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     white-space: nowrap;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-tab {
-    color: rgba(0, 0, 0, 0.6);
-  }
-
   .vol-tab:hover {
     color: #ffffff;
-  }
-
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-tab:hover {
-    color: #000000;
   }
 
   .vol-tab.is-active {
     background: #ffffff;
     color: #0f1115;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-tab.is-active {
-    background: #111111;
-    color: #ffffff;
-  }
-
-  /* Volumes Container & Intro Banner */
-  .volumes-container {
+  .volumes-wall-container {
     display: flex;
     flex-direction: column;
     gap: 48px;
   }
 
-  .volume-section {
+  .wall-volume-section {
     display: flex;
     flex-direction: column;
     gap: 20px;
   }
 
-  .volume-intro-banner {
+  .wall-intro-banner {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr);
     gap: 28px;
     align-items: center;
-    padding: 22px 26px;
+    padding: 20px 24px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .volume-intro-banner {
-    background: #ffffff;
-    border-color: #eaeaea;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
-  }
-
-  .vol-banner-left {
+  .wall-banner-left {
     display: flex;
     flex-direction: column;
     gap: 4px;
   }
 
-  .vol-badge {
+  .wall-badge {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.12em;
-    color: #5E81AC;
+    color: #88C0D0;
     text-transform: uppercase;
   }
 
-  .vol-heading {
+  .wall-heading {
     font-size: 1.35rem;
     font-weight: 600;
     letter-spacing: -0.02em;
-    color: inherit;
+    color: #ffffff;
     margin: 0;
   }
 
-  .vol-subheading {
+  .wall-subheading {
     font-size: 0.82rem;
     color: rgba(255, 255, 255, 0.55);
     margin: 0;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-subheading {
-    color: rgba(0, 0, 0, 0.5);
-  }
-
-  .vol-banner-right {
+  .wall-banner-right {
     border-left: 1px solid rgba(255, 255, 255, 0.1);
     padding-left: 24px;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-banner-right {
-    border-left-color: rgba(0, 0, 0, 0.08);
-  }
-
-  .vol-curator-note {
+  .wall-curator-note {
     font-size: 0.88rem;
     line-height: 1.7;
     color: rgba(255, 255, 255, 0.75);
     margin: 0;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .vol-curator-note {
-    color: #4b5563;
-  }
-
-  /* 5-Column Seamless Photo Grid Wall */
-  .gallery-photo-grid {
+  .wall-photo-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 3px;
@@ -431,12 +459,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     width: 100%;
   }
 
-  :global(body:not(.dark-gallery)) .gallery-wall-wrapper.theme-light .gallery-photo-grid {
-    background: #eaeaea;
-    border-color: #dcdcdc;
-  }
-
-  .photo-tile {
+  .wall-photo-tile {
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -448,7 +471,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     padding: 0;
   }
 
-  .tile-image {
+  .wall-tile-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -458,12 +481,12 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     -webkit-user-drag: none;
   }
 
-  .photo-tile:hover .tile-image {
+  .wall-photo-tile:hover .wall-tile-image {
     transform: scale(1.06);
     filter: brightness(1.05);
   }
 
-  .tile-hover-mask {
+  .wall-tile-mask {
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.6) 100%);
@@ -477,11 +500,11 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     pointer-events: none;
   }
 
-  .photo-tile:hover .tile-hover-mask {
+  .wall-photo-tile:hover .wall-tile-mask {
     opacity: 1;
   }
 
-  .tile-plate-tag {
+  .wall-plate-tag {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-weight: 700;
     font-size: 0.78rem;
@@ -494,7 +517,7 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     color: #ffffff;
   }
 
-  .tile-view-action {
+  .wall-view-action {
     font-size: 0.74rem;
     background: rgba(255, 255, 255, 0.28);
     backdrop-filter: blur(8px);
@@ -505,42 +528,230 @@ const allItems = propsItems || effectiveVolumes.flatMap((v) => v.items);
     font-weight: 500;
   }
 
-  /* Responsive Breakpoints */
+  /* =========================================================
+     模式二：首页「摄影画集」Tab（Album 模式，画册名称+简介+纯图片网格排版）
+     ========================================================= */
+  .album-feed-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    width: 100%;
+  }
+
+  .album-volume-card {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 16px;
+    padding: 32px 32px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.025);
+  }
+
+  .album-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr);
+    gap: 28px;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f2;
+    padding-bottom: 22px;
+  }
+
+  .album-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .album-badge {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #5E81AC;
+    text-transform: uppercase;
+  }
+
+  .album-title {
+    font-size: 1.45rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .album-subtitle {
+    font-size: 0.84rem;
+    color: #777777;
+    margin: 0;
+  }
+
+  .album-header-right {
+    border-left: 1px solid #f0f0f0;
+    padding-left: 24px;
+  }
+
+  .album-note {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: #4b5563;
+    margin: 0;
+  }
+
+  .album-grid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .album-row {
+    display: grid;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .album-row.grid-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .album-row.grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .album-row.grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .album-photo-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #f0f0f2;
+    border: 1px solid #e5e5e8;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.2s ease;
+  }
+
+  .album-photo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.09);
+    border-color: #cccccc;
+  }
+
+  .album-photo-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    display: block;
+  }
+
+  .grid-1 .album-photo-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .album-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .album-photo-card:hover .album-photo-img {
+    transform: scale(1.04);
+  }
+
+  .album-hover-mask {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.5) 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 16px;
+    color: #ffffff;
+    pointer-events: none;
+  }
+
+  .album-photo-card:hover .album-hover-mask {
+    opacity: 1;
+  }
+
+  .album-plate-num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: #ffffff;
+  }
+
+  .album-view-btn {
+    font-size: 0.78rem;
+    background: rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 4px 12px;
+    border-radius: 999px;
+    color: #ffffff;
+    font-weight: 500;
+  }
+
+  /* Responsive Media Queries */
   @media (max-width: 1100px) {
-    .gallery-photo-grid {
+    .wall-photo-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
-    .volume-intro-banner {
+    .wall-intro-banner,
+    .album-header {
       grid-template-columns: 1fr;
       gap: 16px;
     }
-    .vol-banner-right {
+    .wall-banner-right,
+    .album-header-right {
       border-left: 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
       padding-left: 0;
       padding-top: 14px;
+    }
+    .wall-banner-right {
+      border-top-color: rgba(255, 255, 255, 0.1);
     }
   }
 
   @media (max-width: 768px) {
-    .gallery-photo-grid {
+    .wall-photo-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 2px;
     }
-    .gallery-title {
-      font-size: 1.6rem;
+    .album-volume-card {
+      padding: 22px 18px 24px;
+      gap: 20px;
     }
-    .volume-intro-banner {
-      padding: 16px 18px;
+    .album-row.grid-3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (max-width: 520px) {
-    .gallery-photo-grid {
+    .wall-photo-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .gallery-main-header {
-      padding: 16px 0 12px;
+    .album-row.grid-2,
+    .album-row.grid-3 {
+      grid-template-columns: 1fr;
     }
   }
 </style>
+
