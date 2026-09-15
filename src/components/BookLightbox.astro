@@ -104,13 +104,6 @@ const { items } = Astro.props;
               </div>
             </div>
           </div>
-
-          <!-- Readme link -->
-          <div class="folio-actions">
-            <a id="lightbox-readme-link" href="#" class="folio-link-detail">
-              <span>查看单幅特写详情页 →</span>
-            </a>
-          </div>
         </div>
       </aside>
     </div>
@@ -142,7 +135,6 @@ const { items } = Astro.props;
     const exifAperture = lightbox.querySelector('[data-exif-aperture]');
     const exifShutter = lightbox.querySelector('[data-exif-shutter]');
     const exifIso = lightbox.querySelector('[data-exif-iso]');
-    const detailLink = document.getElementById('lightbox-readme-link');
 
     const renderItem = (index) => {
       if (index < 0 || index >= items.length) return;
@@ -180,10 +172,6 @@ const { items } = Astro.props;
         if (exifIso) exifIso.textContent = item.exif.iso || '-';
       } else if (exifWrap) {
         exifWrap.style.display = 'none';
-      }
-
-      if (detailLink) {
-        detailLink.href = `/gallery/${item.id}`;
       }
     };
 
@@ -606,27 +594,6 @@ const { items } = Astro.props;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     color: #e2e8f0;
     font-weight: 500;
-  }
-
-  .folio-actions {
-    margin-top: 8px;
-    padding-top: 8px;
-  }
-
-  .folio-link-detail {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: #88c0d0;
-    font-weight: 500;
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    transition: color 0.2s ease;
-  }
-
-  .folio-link-detail:hover {
-    color: #8fbcbb;
   }
 
   @media (max-width: 900px) {
