@@ -972,18 +972,117 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
     color: #2D6A4F;
   }
 
-  :global(article ul),
+  :global(article ul) {
+    list-style-type: disc;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding-left: 24px;
+  }
+
   :global(article ol) {
-    margin-left: 24px;
-    margin-bottom: 16px;
+    list-style-type: decimal;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding-left: 24px;
+  }
+
+  :global(article ul ul),
+  :global(article ol ul) {
+    list-style-type: circle;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    padding-left: 20px;
+  }
+
+  :global(article ul ul ul),
+  :global(article ol ol ul),
+  :global(article ol ul ul),
+  :global(article ul ol ul) {
+    list-style-type: square;
+    padding-left: 20px;
+  }
+
+  :global(article ol ol),
+  :global(article ul ol) {
+    list-style-type: lower-alpha;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    padding-left: 20px;
+  }
+
+  :global(article ol ol ol),
+  :global(article ul ol ol) {
+    list-style-type: lower-roman;
+    padding-left: 20px;
   }
 
   :global(article li) {
+    display: list-item;
     margin-bottom: 8px;
-    display: inline-block;
+    line-height: 1.8;
+  }
+
+  :global(article li::marker) {
+    color: var(--primary-accent, #5E81AC);
+    font-weight: 500;
+  }
+
+  :global(article li > p) {
+    margin-bottom: 8px;
+  }
+
+  :global(article li > p:last-child) {
+    margin-bottom: 0;
+  }
+
+  :global(article p a),
+  :global(article li a),
+  :global(article blockquote a) {
+    color: #2C5D88;
+    text-decoration: underline;
+    text-decoration-color: rgba(94, 129, 172, 0.4);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 0.2s ease, color 0.2s ease;
+  }
+
+  :global(article p a:hover),
+  :global(article li a:hover),
+  :global(article blockquote a:hover) {
+    color: #1A4B75;
+    text-decoration-color: #5E81AC;
+  }
+
+  :global(article hr) {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 36px 0;
+  }
+
+  :global(article table) {
     width: 100%;
-    transform: translate3d(0, 0, 0);
-    will-change: transform;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 15px;
+  }
+
+  :global(article th),
+  :global(article td) {
+    border: 1px solid var(--border-color);
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  :global(article th) {
+    background: rgba(0, 0, 0, 0.03);
+    font-weight: 600;
+  }
+
+  :global(article img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 1px solid var(--border-color);
   }
 
   :global(article blockquote) {
