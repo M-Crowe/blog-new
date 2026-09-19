@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 720" width="100%" height="100%" style="background-color: #FAF6EB; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px;">
+  <defs>
+    <!-- 箭头标记 -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#4A5568"/>
+    </marker>
+    <!-- 软阴影效果 -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- 外层外框 vcu -->
+  <rect x="20" y="20" width="880" height="680" rx="10" fill="#FAF6EB" stroke="#2D3748" stroke-width="1.5"/>
+  <text x="36" y="42" font-size="14" font-weight="bold" fill="#2D3748">vcu</text>
+
+  <!-- 起始点 -->
+  <circle cx="340" cy="35" r="5" fill="#2D3748"/>
+  <line x1="340" y1="40" x2="340" y2="65" stroke="#4A5568" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- ================= 状态节点定义 ================= -->
+
+  <!-- 1. OFF 状态 -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="65" width="160" height="80" rx="8" fill="#FFFFFF" stroke="#2D3748" stroke-width="1.2"/>
+    <text x="272" y="85" font-weight="bold" fill="#1A202C">OFF</text>
+    <text x="272" y="100" fill="#718096" font-size="11">entry:</text>
+    <text x="272" y="114" fill="#D69E2E">VCU_State = 0;</text>
+    <text x="272" y="127" fill="#D69E2E">HV_Req = 0;</text>
+    <text x="272" y="140" fill="#D69E2E">Torque_Enable = 0;</text>
+  </g>
+
+  <!-- 2. STANDBY 状态 -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="210" width="160" height="80" rx="8" fill="#FFFFFF" stroke="#2D3748" stroke-width="1.2"/>
+    <text x="272" y="230" font-weight="bold" fill="#1A202C">STANDBY</text>
+    <text x="272" y="245" fill="#718096" font-size="11">entry:</text>
+    <text x="272" y="259" fill="#D69E2E">VCU_State = 1;</text>
+    <text x="272" y="272" fill="#D69E2E">HV_Req = 0;</text>
+    <text x="272" y="285" fill="#D69E2E">Torque_Enable = 0;</text>
+  </g>
+
+  <!-- 3. Precharge 状态 -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="350" width="160" height="85" rx="8" fill="#FFFFFF" stroke="#2D3748" stroke-width="1.2"/>
+    <text x="272" y="370" font-weight="bold" fill="#1A202C">Precharge</text>
+    <text x="272" y="385" fill="#718096" font-size="11">entry:</text>
+    <text x="272" y="399" fill="#D69E2E">VCU_State = 2;</text>
+    <text x="272" y="412" fill="#D69E2E">HV_Req = 1;</text>
+    <text x="272" y="425" fill="#D69E2E">Torque_Enable = 0;</text>
+  </g>
+
+  <!-- 4. READY 状态 -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="500" width="160" height="95" rx="8" fill="#FFFFFF" stroke="#2D3748" stroke-width="1.2"/>
+    <text x="272" y="520" font-weight="bold" fill="#1A202C">READY</text>
+    <text x="272" y="535" fill="#718096" font-size="11">entry:</text>
+    <text x="272" y="549" fill="#D69E2E">VCU_State = 3;</text>
+    <text x="272" y="562" fill="#D69E2E">Torque_Enable = 1;</text>
+    <text x="272" y="575" fill="#D69E2E">HV_Req = 1;</text>
+    <text x="272" y="588" fill="#D69E2E">Timer = 0;</text>
+  </g>
+
+  <!-- 5. Postcharge 状态 (左侧) -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="350" width="140" height="85" rx="8" fill="#FFFFFF" stroke="#2D3748" stroke-width="1.2"/>
+    <text x="72" y="370" font-weight="bold" fill="#1A202C">Postcharge</text>
+    <text x="72" y="385" fill="#718096" font-size="11">entry:</text>
+    <text x="72" y="399" fill="#D69E2E">VCU_State = 4;</text>
+    <text x="72" y="412" fill="#D69E2E">Torque_Enable = 0;</text>
+    <text x="72" y="425" fill="#D69E2E">HV_Req = 0;</text>
+  </g>
+
+  <!-- 6. FAULT 状态 (右侧) -->
+  <g filter="url(#shadow)">
+    <rect x="660" y="210" width="180" height="385" rx="10" fill="#FFFFFF" stroke="#2D3748" stroke-width="1.2"/>
+    <text x="675" y="235" font-weight="bold" fill="#1A202C">FAULT</text>
+    <text x="675" y="252" fill="#718096" font-size="11">entry:</text>
+    <text x="675" y="268" fill="#D69E2E">VCU_State = 5;</text>
+    <text x="675" y="283" fill="#D69E2E">HV_Req = 0;</text>
+    <text x="675" y="298" fill="#D69E2E">Torque_Enable = 0;</text>
+  </g>
+
+  <!-- ================= 转移路径与标签 ================= -->
+
+  <!-- OFF <-> STANDBY -->
+  <path d="M 355 145 L 355 210" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="362" y="180" fill="#805AD5" font-size="11">[duration(Key_Sts == 1, msec) &gt;= 50 &amp;&amp; HVIL_Fault == 0]</text>
+
+  <path d="M 325 210 L 325 145" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="250" y="180" fill="#2B6CB0" font-size="11">[Key_Sts == 0]</text>
+
+  <!-- STANDBY -> Precharge -->
+  <path d="M 340 290 L 340 350" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="348" y="322" fill="#2B6CB0" font-size="11">[Key_Sts == 2 &amp;&amp; HVIL_Fault == 0 &amp;&amp; Brake_Pedal &gt; 10]</text>
+
+  <!-- STANDBY -> FAULT -->
+  <path d="M 420 250 L 660 250" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="490" y="243" fill="#2B6CB0" font-size="11">[HVIL_Fault == 1]</text>
+
+  <!-- Precharge -> READY -->
+  <path d="M 340 435 L 340 500" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="348" y="470" fill="#2B6CB0" font-size="11">[BMS_HV_Ready == 1]</text>
+
+  <!-- Precharge -> Postcharge -->
+  <path d="M 260 392 L 200 392" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="206" y="385" fill="#2B6CB0" font-size="11">[Key_Sts == 0]</text>
+
+  <!-- Precharge -> FAULT -->
+  <path d="M 420 392 L 660 392" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="500" y="385" fill="#2B6CB0" font-size="11">after(50, msec)</text>
+
+  <!-- READY -> Postcharge -->
+  <path d="M 260 547 C 130 547, 130 480, 130 435" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="140" y="510" fill="#2B6CB0" font-size="11">[Key_Sts == 0]</text>
+
+  <!-- READY -> FAULT -->
+  <path d="M 420 547 C 560 547, 660 480, 660 430" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="490" y="538" fill="#2B6CB0" font-size="11">[HVIL_Fault == 1]</text>
+
+  <!-- Postcharge -> OFF -->
+  <path d="M 130 350 C 130 105, 200 105, 260 105" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="40" y="220" fill="#2B6CB0" font-size="11">[BMS_HV_Ready == 0 || after(50, msec)]</text>
+
+  <!-- FAULT -> OFF -->
+  <path d="M 750 210 C 750 105, 500 105, 420 105" fill="none" stroke="#2B6CB0" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <text x="540" y="98" fill="#2B6CB0" font-size="11">[Key_Sts == 0]</text>
+
+</svg>
