@@ -187,6 +187,80 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
     </div>
   </div>
 
+  {filteredHeadings.length > 0 && (
+    <>
+      <!-- 手机端浮动目录触发按钮 (FAB) -->
+      <aside class="mobile-toc-fab-container" aria-label="移动端目录快捷入口">
+        <button
+          class="mobile-toc-fab"
+          id="mobile-toc-fab"
+          type="button"
+          aria-label="打开文章目录"
+          title="文章目录"
+          aria-expanded="false"
+          aria-controls="mobile-toc-drawer"
+        >
+          <svg class="mobile-toc-fab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          <span class="mobile-toc-fab-text">目录</span>
+        </button>
+      </aside>
+
+      <!-- 手机端目录抽屉 (Drawer / Bottom Sheet) -->
+      <div
+        class="mobile-toc-drawer-overlay"
+        id="mobile-toc-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="文章目录"
+        hidden
+      >
+        <div class="mobile-toc-backdrop" id="mobile-toc-backdrop"></div>
+        <div class="mobile-toc-panel">
+          <header class="mobile-toc-header">
+            <div class="mobile-toc-header-left">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="header-toc-icon">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+              </svg>
+              <h2 class="mobile-toc-header-title">文章目录</h2>
+              <span class="mobile-toc-badge">{filteredHeadings.length} 个小节</span>
+            </div>
+            <button class="mobile-toc-close-btn" id="mobile-toc-close" type="button" aria-label="关闭目录">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </header>
+
+          <div class="mobile-toc-body" id="mobile-toc-body">
+            <ul class="mobile-toc-list">
+              {filteredHeadings.map((h) => (
+                <li class={`mobile-toc-item depth-${h.depth}`}>
+                  <a href={`#${h.slug}`} class="mobile-toc-link">
+                    <span class="toc-indicator"></span>
+                    <span class="toc-text">{h.text}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </>
+  )}
+
   <button class="back-to-top" id="back-to-top" type="button" aria-label="回到顶部" title="回到顶部">↑</button>
 
   <!-- 核心 UI 交互脚本 -->
@@ -204,37 +278,109 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
         var progress = Math.min(100, Math.max(0, (window.scrollY / totalHeight) * 100));
         bar.style.width = progress + '%';
       }
+      if (window._readingProgressScroll) {
+        window.removeEventListener('scroll', window._readingProgressScroll);
+        window.removeEventListener('resize', window._readingProgressScroll);
+      }
+      window._readingProgressScroll = updateProgress;
       window.addEventListener('scroll', updateProgress, { passive: true });
       window.addEventListener('resize', updateProgress, { passive: true });
       updateProgress();
     }
 
-    // 2. 目录 (TOC) 锚点平滑跳转与 ScrollSpy 高亮
+    // 2. 目录 (TOC) 交互与 ScrollSpy (Desktop + Mobile)
     function setupTOC() {
-      var tocLinks = Array.from(document.querySelectorAll('.toc-list a'));
-      if (!tocLinks.length) return;
+      var desktopLinks = Array.from(document.querySelectorAll('#toc-list a'));
+      var mobileLinks = Array.from(document.querySelectorAll('.mobile-toc-list a'));
+      var allTocLinks = desktopLinks.concat(mobileLinks);
+      if (!allTocLinks.length) return;
 
-      tocLinks.forEach(function (link) {
-        link.addEventListener('click', function (e) {
+      var drawer = document.getElementById('mobile-toc-drawer');
+      var fab = document.getElementById('mobile-toc-fab');
+      var closeBtn = document.getElementById('mobile-toc-close');
+      var backdrop = document.getElementById('mobile-toc-backdrop');
+
+      function openDrawer() {
+        if (!drawer) return;
+        drawer.removeAttribute('hidden');
+        document.body.style.overflow = 'hidden';
+        if (fab) fab.setAttribute('aria-expanded', 'true');
+        requestAnimationFrame(function() {
+          drawer.classList.add('is-open');
+          var activeItem = drawer.querySelector('.mobile-toc-link.active');
+          if (activeItem) {
+            activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        });
+      }
+
+      function closeDrawer() {
+        if (!drawer || drawer.hasAttribute('hidden')) return;
+        drawer.classList.remove('is-open');
+        if (fab) fab.setAttribute('aria-expanded', 'false');
+        setTimeout(function() {
+          drawer.setAttribute('hidden', '');
+          document.body.style.overflow = '';
+        }, 250);
+      }
+
+      if (fab) {
+        fab.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openDrawer();
+        };
+      }
+
+      if (closeBtn) {
+        closeBtn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeDrawer();
+        };
+      }
+
+      if (backdrop) {
+        backdrop.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeDrawer();
+        };
+      }
+
+      if (window._mobileTocEscHandler) {
+        window.removeEventListener('keydown', window._mobileTocEscHandler);
+      }
+      window._mobileTocEscHandler = function(e) {
+        if (e.key === 'Escape' && drawer && !drawer.hasAttribute('hidden')) {
+          closeDrawer();
+        }
+      };
+      window.addEventListener('keydown', window._mobileTocEscHandler);
+
+      // TOC 点击平滑滚动与手机端收起
+      allTocLinks.forEach(function(link) {
+        link.onclick = function(e) {
           var href = link.getAttribute('href');
           if (href && href.startsWith('#')) {
             var targetId = href.slice(1);
             var target = document.getElementById(targetId);
             if (target) {
               e.preventDefault();
+              closeDrawer();
               target.scrollIntoView({ behavior: 'smooth', block: 'start' });
               history.pushState(null, '', href);
             }
           }
-        });
+        };
       });
 
       function updateActiveTOC() {
         var scrollY = window.scrollY;
         var currentSlug = null;
 
-        for (var i = 0; i < tocLinks.length; i++) {
-          var link = tocLinks[i];
+        for (var i = 0; i < desktopLinks.length; i++) {
+          var link = desktopLinks[i];
           var href = link.getAttribute('href');
           if (href && href.startsWith('#')) {
             var target = document.getElementById(href.slice(1));
@@ -247,7 +393,7 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
           }
         }
 
-        tocLinks.forEach(function (link) {
+        allTocLinks.forEach(function(link) {
           var href = link.getAttribute('href');
           if (currentSlug && href === '#' + currentSlug) {
             link.classList.add('active');
@@ -257,7 +403,11 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
         });
       }
 
-      window.addEventListener('scroll', updateActiveTOC, { passive: true });
+      if (window._tocScrollHandler) {
+        window.removeEventListener('scroll', window._tocScrollHandler);
+      }
+      window._tocScrollHandler = updateActiveTOC;
+      window.addEventListener('scroll', window._tocScrollHandler, { passive: true });
       updateActiveTOC();
     }
 
@@ -354,17 +504,24 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
       var backToTopBtn = document.getElementById('back-to-top');
       if (!backToTopBtn) return;
 
-      window.addEventListener('scroll', function () {
+      function onScroll() {
         if (window.scrollY > 300) {
           backToTopBtn.classList.add('visible');
         } else {
           backToTopBtn.classList.remove('visible');
         }
-      }, { passive: true });
+      }
 
-      backToTopBtn.addEventListener('click', function () {
+      if (window._backToTopScroll) {
+        window.removeEventListener('scroll', window._backToTopScroll);
+      }
+      window._backToTopScroll = onScroll;
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      backToTopBtn.onclick = function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+      };
     }
 
     function initPostPageUI() {
@@ -438,10 +595,20 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
         }
       };
 
+      let cleanupPretext = null;
+
       const setupMouseAttraction = () => {
+        if (cleanupPretext) {
+          cleanupPretext();
+          cleanupPretext = null;
+        }
+
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const article = document.querySelector('article');
         if (!article) return;
+
+        // 清理已有 orb 节点
+        document.querySelectorAll('.gravity-orb').forEach((el) => el.remove());
 
         const result = [];
         article.querySelectorAll('p').forEach((el) => {
@@ -523,13 +690,29 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseleave', onLeave);
         window.addEventListener('blur', onLeave);
+
+        cleanupPretext = () => {
+          cancelAnimationFrame(rafId);
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseleave', onLeave);
+          window.removeEventListener('blur', onLeave);
+          orbEl.remove();
+        };
       };
+
+      document.addEventListener('astro:before-swap', () => {
+        if (cleanupPretext) {
+          cleanupPretext();
+          cleanupPretext = null;
+        }
+      });
 
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setupMouseAttraction);
       } else {
         setupMouseAttraction();
       }
+      document.addEventListener('astro:page-load', setupMouseAttraction);
     </script>
   )}
 </BaseLayout>
@@ -1524,7 +1707,238 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
       grid-template-columns: 220px minmax(0, 1fr);
     }
     .toc-aside {
-      display: none;
+      display: none !important;
+    }
+  }
+
+  /* =========================================================
+     Mobile TOC (Floating Button + Slide-up Drawer)
+     ========================================================= */
+  .mobile-toc-fab-container {
+    display: none;
+    position: fixed;
+    bottom: 74px;
+    right: 20px;
+    z-index: 998;
+  }
+
+  .mobile-toc-fab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(94, 129, 172, 0.35);
+    color: #2E3440;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(46, 52, 64, 0.12), 0 1px 3px rgba(46, 52, 64, 0.05);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+  }
+
+  .mobile-toc-fab:hover,
+  .mobile-toc-fab:active {
+    transform: translateY(-2px);
+    background: #FFFFFF;
+    border-color: #5E81AC;
+    box-shadow: 0 6px 20px rgba(94, 129, 172, 0.22);
+    color: #5E81AC;
+  }
+
+  .mobile-toc-fab-icon {
+    color: #5E81AC;
+    flex-shrink: 0;
+  }
+
+  .mobile-toc-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mobile-toc-drawer-overlay[hidden] {
+    display: none !important;
+  }
+
+  .mobile-toc-drawer-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobile-toc-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(46, 52, 64, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .mobile-toc-panel {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 600px;
+    max-height: 75vh;
+    background: #FFFFFF;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(216, 222, 233, 0.9);
+    border-bottom: none;
+  }
+
+  .mobile-toc-drawer-overlay.is-open .mobile-toc-panel {
+    transform: translateY(0);
+  }
+
+  .mobile-toc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #ECEFF4;
+    background: #F8FAFC;
+  }
+
+  .mobile-toc-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-toc-icon {
+    color: #5E81AC;
+  }
+
+  .mobile-toc-header-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: #2E3440;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .mobile-toc-badge {
+    font-size: 11px;
+    background: rgba(94, 129, 172, 0.12);
+    color: #5E81AC;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+
+  .mobile-toc-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #D8DEE9;
+    background: #FFFFFF;
+    color: #4C566A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-toc-close-btn:hover {
+    background: #ECEFF4;
+    color: #2E3440;
+    border-color: #5E81AC;
+  }
+
+  .mobile-toc-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px 28px;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #D8DEE9 #F8FAFC;
+  }
+
+  .mobile-toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-toc-item {
+    margin: 0;
+  }
+
+  .mobile-toc-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    color: #4C566A;
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.45;
+    transition: all 0.18s ease;
+  }
+
+  .mobile-toc-item.depth-3 .mobile-toc-link {
+    padding-left: 26px;
+    font-size: 13px;
+    color: #6C7A92;
+  }
+
+  .toc-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #D8DEE9;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-toc-link:hover {
+    background: rgba(94, 129, 172, 0.08);
+    color: #5E81AC;
+  }
+
+  .mobile-toc-link:hover .toc-indicator {
+    background: #5E81AC;
+    transform: scale(1.3);
+  }
+
+  .mobile-toc-link.active {
+    background: rgba(94, 129, 172, 0.12);
+    color: #1A4B75;
+    font-weight: 600;
+  }
+
+  .mobile-toc-link.active .toc-indicator {
+    background: #5E81AC;
+    box-shadow: 0 0 8px rgba(94, 129, 172, 0.6);
+    transform: scale(1.4);
+  }
+
+  @media (max-width: 1024px) {
+    .mobile-toc-fab-container {
+      display: block;
     }
   }
 
@@ -1627,9 +2041,14 @@ const readingStats = getReadingStats(post.body || '', post.data.excerpt || '');
     .back-to-top {
       bottom: 20px;
       right: 20px;
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       font-size: 16px;
+    }
+
+    .mobile-toc-fab-container {
+      bottom: 68px;
+      right: 20px;
     }
 
     .toc-section {
