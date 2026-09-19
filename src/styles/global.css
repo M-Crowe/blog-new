@@ -40,9 +40,11 @@ a {
   text-decoration: none;
 }
 
-/* 全局隐藏页面默认滚动条，同时完整保留鼠标滚轮与手势滑动功能 */
+/* 全局隐藏页面默认滚动条，同时完整保留鼠标滚轮与手势滑动功能，并防止移动端横向溢出 */
 html,
 body {
+  max-width: 100%;
+  overflow-x: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
