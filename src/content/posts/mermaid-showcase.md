@@ -4,6 +4,8 @@ date: 2026-09-18
 excerpt: '全面验证博客对 Mermaid 流程图、时序图、类图、状态机、Git 图及数据可视化的渲染能力。'
 tags: ['Mermaid', '可视化', '博客特性']
 author: 'Marinus'
+aiGenerated: true
+aiModel: 'Gemini 3.7Flash'
 ---
 
 本文用于测试与演示博客系统对 **Mermaid.js** 各种常用图表类型的渲染效果与交互特性。
@@ -14,14 +16,14 @@ author: 'Marinus'
 flowchart TD
     Start(["🚀 开始系统初始化"]) --> InitConfig["加载配置文件 config.yaml"]
     InitConfig --> CheckDB{"检查数据库连接"}
-    
+
     CheckDB -- 成功 --> LoadCache["预热 Redis 缓存"]
     CheckDB -- 失败 --> RetryDB["重试连接 (最多3次)"]
-    
+
     RetryDB --> CheckRetry{"重试是否超限?"}
     CheckRetry -- 未超限 --> CheckDB
     CheckRetry -- 已超限 --> SendAlert["🚨 发送告警通知"] --> Stop(["🛑 终止启动"])
-    
+
     LoadCache --> StartServer["启动 HTTP/WebSocket 服务"]
     StartServer --> Ready(["✨ 系统就绪，开始监听流量"])
 ```
