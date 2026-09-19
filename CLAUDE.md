@@ -32,7 +32,7 @@ A personal blog (Marinus's Blog) built with Astro 6 and `@chenglou/pretext` for 
 - `src/pages/about.astro` — about page
 - `src/pages/gallery/[id].astro` — gallery item README pages
 
-**Key library — Pretext** (`@chenglou/pretext`): Used in `[slug].astro` for canvas-based text layout. The `prepareWithSegments` and `layoutWithLines` functions measure text via Canvas and render it as precisely-sized `<span>` elements. Only the `pretext-canvas-typography` post enables the mouse gravity attraction effect (`data-pretext-attract`).
+**Key library — Pretext** (`@chenglou/pretext`): Global typography engine located in `src/lib/pretextTypography.ts` integrated via `src/layouts/BaseLayout.astro`. Uses `prepareWithSegments` and `layoutWithLines` to measure text via Canvas and render it as precisely-sized `.pretext-line` blocks across all pages (home, posts, about, archive, gallery, 404), preserving nested DOM formatting (links, bold, code). The `pretext-canvas-typography` post enables interactive mouse gravity attraction (`data-pretext-attract="true"`).
 
 **Cover system** (`src/lib/homepageCover.ts`): Generates seasonal/time-based SVG covers programmatically. Seasons (spring/summer/autumn/winter) and moments (morning/noon/evening/night) produce different color palettes. The homepage currently uses a manual cover (`/covers/spings/night.jpg`).
 

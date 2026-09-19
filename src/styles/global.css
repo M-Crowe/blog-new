@@ -54,3 +54,46 @@ body::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
+
+/* Pretext Typography Global Styles */
+.pretext-line {
+  display: block;
+  box-sizing: border-box;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+[data-pretext-rendered="true"] {
+  text-rendering: optimizeLegibility;
+}
+
+/* Native Reading Typography Enhancements */
+article p,
+.post-article-body p {
+  text-wrap: pretty;
+  word-break: break-word;
+  line-height: 1.85;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+/* Gravity attraction glowing orb */
+.gravity-orb {
+  position: fixed;
+  width: 140px;
+  height: 140px;
+  margin-left: -70px;
+  margin-top: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(94, 129, 172, 0.18) 0%, rgba(136, 192, 208, 0.08) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 999;
+  transform: translate3d(0, 0, 0);
+  will-change: left, top;
+  filter: blur(8px);
+}
+
+

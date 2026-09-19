@@ -1,104 +1,770 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const posts = await getCollection('posts');
+const postSlugs = posts.map((p) => p.id.replace(/\.md$/, ''));
+const randomSlug = postSlugs.length > 0 ? postSlugs[Math.floor(Math.random() * postSlugs.length)] : '';
 ---
 
-<BaseLayout title="页面未找到 (404)" description="您访问的页面不存在或已被移除。">
-  <main class="not-found-main">
-    <div class="not-found-card">
-      <span class="error-code">404</span>
-      <h1 class="error-title">页面未找到</h1>
-      <p class="error-desc">
-        抱歉，您要寻找的页面可能已经被移动、删除，或输入的链接地址有误。
-      </p>
-      <div class="action-buttons">
-        <a href="/" class="btn btn-primary">返回首页</a>
-        <a href="/archive" class="btn btn-secondary">浏览文章归档</a>
-      </div>
+<BaseLayout
+  title="404 · 时空引力坍缩"
+  description="您所探索的页面已坠入超维引力视界，请启动时空折跃信标返回已知宇宙。"
+  bodyClass="dark-gallery not-found-page"
+  maxWidth="1400px"
+>
+  <main class="singularity-container">
+    <!-- 交互式粒子与引力透镜 Canvas 画布 -->
+    <canvas id="singularity-canvas" class="singularity-canvas" aria-hidden="true"></canvas>
+
+    <!-- 赛博时空遥测与控制台面板 -->
+    <div class="hud-console">
+      <!-- 顶部时空遥测 HUD -->
+      <header class="telemetry-bar">
+        <div class="telemetry-item">
+          <span class="hud-indicator pulse"></span>
+          <span class="hud-label">STATUS:</span>
+          <span class="hud-val alert">ERR_404_SINGULARITY_COLLAPSE</span>
+        </div>
+        <div class="telemetry-item desktop-only">
+          <span class="hud-label">COORDS:</span>
+          <span class="hud-val" id="hud-coords">X: 000.00 | Y: 000.00</span>
+        </div>
+        <div class="telemetry-item desktop-only">
+          <span class="hud-label">PARTICLES:</span>
+          <span class="hud-val" id="hud-particles">1,200 ACTIVE</span>
+        </div>
+      </header>
+
+      <!-- 核心信息区 -->
+      <section class="singularity-card">
+        <div class="canvas-glitch-wrapper">
+          <div class="singularity-ring" aria-hidden="true"></div>
+          <!-- 粒子画布承载主要 404 视觉，此处放置备用无障碍文本 -->
+          <h1 class="sr-only">404 - 页面迷失在超维时空中</h1>
+          <div class="holo-subtitle" data-pretext>
+            <span class="holo-tag">DIMENSIONAL DRIFT</span>
+            <span class="holo-title">坐标丢失 · 视界坍缩</span>
+          </div>
+        </div>
+
+        <p class="singularity-desc">
+          目标页面在时空曲率中折叠消失。物理引擎已捕获当前残存粒子，移动鼠标或点击画面可触发引力对撞与重构。
+        </p>
+
+        <!-- 超光速折跃操作控制台 -->
+        <div class="warp-controls">
+          <a href="/" class="warp-btn btn-primary" title="返回博客首页 (快捷键 H)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>折跃回主宇宙 (首页)</span>
+          </a>
+
+          {randomSlug && (
+            <a href={`/posts/${randomSlug}`} class="warp-btn btn-random" id="btn-random-warp" title="随机时空跳跃 (快捷键 R)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 3 21 3 21 8"></polyline>
+                <line x1="4" y1="20" x2="21" y2="3"></line>
+                <polyline points="21 16 21 21 16 21"></polyline>
+                <line x1="15" y1="15" x2="21" y2="21"></line>
+                <line x1="4" y1="4" x2="9" y2="9"></line>
+              </svg>
+              <span>随机时空穿越</span>
+            </a>
+          )}
+
+          <a href="/archive" class="warp-btn btn-secondary" title="查阅历史档案 (快捷键 A)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>调取时空航行日志 (归档)</span>
+          </a>
+
+          <button type="button" class="warp-btn btn-shockwave" id="btn-supernova" title="引力对撞冲击波 (快捷键 Space)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>释放引力超新星 💥</span>
+          </button>
+        </div>
+
+        <!-- 键盘快捷键提示小徽章 -->
+        <footer class="hud-shortcuts desktop-only">
+          <span>快捷指令:</span>
+          <kbd>Space</kbd> 引力爆发
+          <kbd>R</kbd> 随机穿越
+          <kbd>H</kbd> 返回首页
+          <kbd>A</kbd> 查看归档
+        </footer>
+      </section>
     </div>
   </main>
+
+  <!-- 404 引力奇点粒子系统核心引擎 -->
+  <script is:inline define:vars={{ postSlugs }}>
+    (function () {
+      var canvas = null;
+      var ctx = null;
+      var animationId = 0;
+      var particles = [];
+      var bgStars = [];
+      var width = 0;
+      var height = 0;
+      var dpr = 1;
+      var mouse = { x: -9999, y: -9999, radius: 140, isDown: false };
+      var shockwaves = [];
+      var isRunning = false;
+
+      // 粒子定义
+      function createParticle(origX, origY, color) {
+        var angle = Math.random() * Math.PI * 2;
+        var dist = Math.random() * 200 + 50;
+        return {
+          originX: origX,
+          originY: origY,
+          x: origX + Math.cos(angle) * dist,
+          y: origY + Math.sin(angle) * dist,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.5) * 4,
+          size: Math.random() * 1.8 + 1.2,
+          baseSize: Math.random() * 1.8 + 1.2,
+          color: color || '#88C0D0',
+          friction: 0.88,
+          spring: 0.05,
+          scatter: Math.random() * 0.4 + 0.8,
+        };
+      }
+
+      // 背景星辰
+      function createStar() {
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: Math.random() * 1.5 + 0.4,
+          alpha: Math.random() * 0.7 + 0.2,
+          speed: Math.random() * 0.25 + 0.05,
+          driftAngle: Math.random() * Math.PI * 2,
+        };
+      }
+
+      // 采样 "404" 文本形成粒子阵列
+      function sample404Glyphs() {
+        var offCanvas = document.createElement('canvas');
+        var offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+        if (!offCtx) return [];
+
+        var targetW = Math.min(width * 0.85, 680);
+        var targetH = targetW * 0.42;
+        offCanvas.width = targetW;
+        offCanvas.height = targetH;
+
+        var fontSize = Math.floor(targetW * 0.48);
+        offCtx.fillStyle = '#ffffff';
+        offCtx.font = '900 ' + fontSize + 'px "Monaspace Krypton", -apple-system, BlinkMacSystemFont, monospace';
+        offCtx.textAlign = 'center';
+        offCtx.textBaseline = 'middle';
+        offCtx.fillText('404', targetW / 2, targetH / 2);
+
+        var imgData = offCtx.getImageData(0, 0, targetW, targetH);
+        var data = imgData.data;
+        var sampled = [];
+
+        var step = Math.max(3, Math.floor(targetW / 140));
+        var centerX = width / 2;
+        var centerY = Math.max(160, height * 0.32);
+
+        var colors = ['#88C0D0', '#81A1C1', '#5E81AC', '#ECEFF4', '#B48EAD', '#EBCB8B'];
+
+        for (var y = 0; y < targetH; y += step) {
+          for (var x = 0; x < targetW; x += step) {
+            var idx = (y * targetW + x) * 4;
+            if (data[idx + 3] > 120) {
+              var worldX = centerX - targetW / 2 + x;
+              var worldY = centerY - targetH / 2 + y;
+              var col = colors[Math.floor(Math.random() * colors.length)];
+              sampled.push(createParticle(worldX, worldY, col));
+            }
+          }
+        }
+
+        return sampled;
+      }
+
+      function initDimensions() {
+        if (!canvas) return;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = canvas.parentElement ? canvas.parentElement.clientWidth : window.innerWidth;
+        height = Math.max(window.innerHeight, 720);
+
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+
+        ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.scale(dpr, dpr);
+        }
+
+        particles = sample404Glyphs();
+
+        bgStars = [];
+        var starCount = Math.floor(width * 0.12);
+        for (var i = 0; i < starCount; i++) {
+          bgStars.push(createStar());
+        }
+
+        var pCountEl = document.getElementById('hud-particles');
+        if (pCountEl) {
+          pCountEl.textContent = particles.length + ' ACTIVE';
+        }
+      }
+
+      function triggerShockwave(originX, originY, maxPower) {
+        var sx = originX !== undefined ? originX : width / 2;
+        var sy = originY !== undefined ? originY : Math.max(160, height * 0.32);
+        shockwaves.push({
+          x: sx,
+          y: sy,
+          radius: 10,
+          maxRadius: Math.max(width, height) * 0.75,
+          speed: 28,
+          power: maxPower || 45,
+          opacity: 1,
+        });
+      }
+
+      function renderFrame() {
+        if (!ctx || !isRunning) return;
+
+        // 半透背景营造彗星与光子拖尾感
+        ctx.fillStyle = 'rgba(9, 10, 13, 0.28)';
+        ctx.fillRect(0, 0, width, height);
+
+        // 1. 绘制背景星辰
+        for (var s = 0; s < bgStars.length; s++) {
+          var star = bgStars[s];
+          star.y += star.speed;
+          if (star.y > height) {
+            star.y = 0;
+            star.x = Math.random() * width;
+          }
+          ctx.fillStyle = 'rgba(236, 239, 244, ' + star.alpha + ')';
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 2. 绘制冲击波光环
+        for (var sw = shockwaves.length - 1; sw >= 0; sw--) {
+          var wave = shockwaves[sw];
+          wave.radius += wave.speed;
+          wave.opacity *= 0.94;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(136, 192, 208, ' + (wave.opacity * 0.6) + ')';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.restore();
+
+          // 冲击波推开粒子
+          for (var p = 0; p < particles.length; p++) {
+            var pt = particles[p];
+            var dx = pt.x - wave.x;
+            var dy = pt.y - wave.y;
+            var d = Math.hypot(dx, dy);
+            if (Math.abs(d - wave.radius) < 60 && d > 0.1) {
+              var push = ((60 - Math.abs(d - wave.radius)) / 60) * wave.power;
+              pt.vx += (dx / d) * push;
+              pt.vy += (dy / d) * push;
+            }
+          }
+
+          if (wave.opacity < 0.02 || wave.radius > wave.maxRadius) {
+            shockwaves.splice(sw, 1);
+          }
+        }
+
+        // 3. 绘制与模拟 404 文字粒子
+        var mRadius = mouse.radius;
+        var mRadiusSq = mRadius * mRadius;
+
+        for (var i = 0; i < particles.length; i++) {
+          var pt = particles[i];
+
+          // 鼠标物理斥力/引力
+          var mdx = pt.x - mouse.x;
+          var mdy = pt.y - mouse.y;
+          var mDistSq = mdx * mdx + mdy * mdy;
+
+          if (mDistSq < mRadiusSq && mDistSq > 0.01) {
+            var mDist = Math.sqrt(mDistSq);
+            var mForce = (1 - mDist / mRadius) * (mouse.isDown ? -32 : 18) * pt.scatter;
+            pt.vx += (mdx / mDist) * mForce;
+            pt.vy += (mdy / mDist) * mForce;
+          }
+
+          // 弹簧回弹力回到目标字符位置
+          var hdx = pt.originX - pt.x;
+          var hdy = pt.originY - pt.y;
+          pt.vx += hdx * pt.spring;
+          pt.vy += hdy * pt.spring;
+
+          // 阻尼摩擦
+          pt.vx *= pt.friction;
+          pt.vy *= pt.friction;
+
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+
+          // 渲染发光粒子
+          ctx.fillStyle = pt.color;
+          ctx.beginPath();
+          var speed = Math.hypot(pt.vx, pt.vy);
+          var renderSize = pt.baseSize + Math.min(speed * 0.4, 2.5);
+          ctx.arc(pt.x, pt.y, renderSize, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 速度快时连线临近粒子产生引力丝（Cosmic Strings）
+          if (speed > 8 && i % 4 === 0) {
+            ctx.strokeStyle = 'rgba(136, 192, 208, 0.2)';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(pt.x, pt.y);
+            ctx.lineTo(pt.originX, pt.originY);
+            ctx.stroke();
+          }
+        }
+
+        animationId = requestAnimationFrame(renderFrame);
+      }
+
+      function setupEvents() {
+        function onMouseMove(e) {
+          var rect = canvas.getBoundingClientRect();
+          mouse.x = e.clientX - rect.left;
+          mouse.y = e.clientY - rect.top;
+
+          var coordsEl = document.getElementById('hud-coords');
+          if (coordsEl) {
+            coordsEl.textContent = 'X: ' + mouse.x.toFixed(1) + ' | Y: ' + mouse.y.toFixed(1);
+          }
+        }
+
+        function onMouseDown(e) {
+          mouse.isDown = true;
+          var rect = canvas.getBoundingClientRect();
+          var clickX = e.clientX - rect.left;
+          var clickY = e.clientY - rect.top;
+          triggerShockwave(clickX, clickY, 40);
+        }
+
+        function onMouseUp() {
+          mouse.isDown = false;
+        }
+
+        function onMouseLeave() {
+          mouse.x = -9999;
+          mouse.y = -9999;
+          mouse.isDown = false;
+        }
+
+        function onTouchMove(e) {
+          if (!e.touches.length) return;
+          var rect = canvas.getBoundingClientRect();
+          mouse.x = e.touches[0].clientX - rect.left;
+          mouse.y = e.touches[0].clientY - rect.top;
+        }
+
+        function onTouchEnd() {
+          mouse.x = -9999;
+          mouse.y = -9999;
+        }
+
+        window.addEventListener('mousemove', onMouseMove, { passive: true });
+        window.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('mouseleave', onMouseLeave);
+        window.addEventListener('touchmove', onTouchMove, { passive: true });
+        window.addEventListener('touchend', onTouchEnd);
+
+        var resizeTimer = null;
+        window.addEventListener('resize', function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(initDimensions, 150);
+        });
+
+        // 按钮触发超新星冲击波
+        var btnSupernova = document.getElementById('btn-supernova');
+        if (btnSupernova) {
+          btnSupernova.onclick = function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerShockwave(width / 2, Math.max(160, height * 0.32), 65);
+          };
+        }
+
+        // 键盘快捷键监听
+        function onKeyDown(e) {
+          if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+          var key = e.key.toLowerCase();
+          if (e.code === 'Space' || key === ' ') {
+            e.preventDefault();
+            triggerShockwave(mouse.x > 0 ? mouse.x : width / 2, mouse.y > 0 ? mouse.y : height * 0.32, 60);
+          } else if (key === 'r') {
+            if (postSlugs && postSlugs.length > 0) {
+              var rand = postSlugs[Math.floor(Math.random() * postSlugs.length)];
+              window.location.href = '/posts/' + rand;
+            }
+          } else if (key === 'h') {
+            window.location.href = '/';
+          } else if (key === 'a') {
+            window.location.href = '/archive';
+          }
+        }
+        window.addEventListener('keydown', onKeyDown);
+
+        window._clean404Listeners = function () {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mousedown', onMouseDown);
+          window.removeEventListener('mouseup', onMouseUp);
+          window.removeEventListener('mouseleave', onMouseLeave);
+          window.removeEventListener('touchmove', onTouchMove);
+          window.removeEventListener('touchend', onTouchEnd);
+          window.removeEventListener('keydown', onKeyDown);
+        };
+      }
+
+      function init404Scene() {
+        canvas = document.getElementById('singularity-canvas');
+        if (!canvas) return;
+
+        if (window._clean404Listeners) {
+          window._clean404Listeners();
+        }
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+        }
+
+        isRunning = true;
+        initDimensions();
+        setupEvents();
+        renderFrame();
+
+        // 初始出场涟漪
+        setTimeout(function () {
+          triggerShockwave(width / 2, Math.max(160, height * 0.32), 35);
+        }, 300);
+      }
+
+      document.addEventListener('astro:before-swap', function () {
+        isRunning = false;
+        if (animationId) cancelAnimationFrame(animationId);
+        if (window._clean404Listeners) window._clean404Listeners();
+      });
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init404Scene);
+      } else {
+        init404Scene();
+      }
+      document.addEventListener('astro:page-load', init404Scene);
+    })();
+  </script>
 </BaseLayout>
 
 <style>
-  .not-found-main {
-    min-height: 55vh;
+  :global(body.not-found-page) {
+    background-color: #08090C !important;
+    overflow-x: hidden;
+  }
+
+  .singularity-container {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 120px);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 0;
+    padding: 30px 0 60px;
+    box-sizing: border-box;
   }
 
-  .not-found-card {
-    text-align: center;
-    max-width: 520px;
-    background: rgba(0, 0, 0, 0.02);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 48px 36px;
+  /* 背景 Canvas */
+  .singularity-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: auto;
+    cursor: crosshair;
   }
 
-  .error-code {
+  /* HUD 控制台容器 */
+  .hud-console {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 780px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 140px; /* 留出顶部大字 404 粒子视觉空间 */
+  }
+
+  /* 顶部遥测状态条 */
+  .telemetry-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: rgba(15, 17, 23, 0.7);
+    border: 1px solid rgba(136, 192, 208, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     font-family: var(--font-mono);
-    font-size: 4.5rem;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    color: var(--primary-accent);
-    display: block;
-    margin-bottom: 12px;
+    font-size: 0.76rem;
+    color: #88C0D0;
+    letter-spacing: 0.06em;
   }
 
-  .error-title {
-    font-size: 1.5rem;
+  .telemetry-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hud-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #BF616A;
+  }
+
+  .hud-indicator.pulse {
+    animation: hudPulse 1.8s infinite;
+  }
+
+  @keyframes hudPulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(191, 97, 106, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(191, 97, 106, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(191, 97, 106, 0);
+    }
+  }
+
+  .hud-label {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .hud-val {
+    color: #ECEFF4;
     font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 14px;
   }
 
-  .error-desc {
+  .hud-val.alert {
+    color: #BF616A;
+    font-weight: 700;
+  }
+
+  /* 核心信息卡片 */
+  .singularity-card {
+    text-align: center;
+    background: rgba(14, 16, 22, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 36px 32px 30px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .canvas-glitch-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .holo-subtitle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .holo-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: #88C0D0;
+    background: rgba(136, 192, 208, 0.12);
+    border: 1px solid rgba(136, 192, 208, 0.25);
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+
+  .holo-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #FFFFFF;
+    text-shadow: 0 0 20px rgba(136, 192, 208, 0.4);
+  }
+
+  .singularity-desc {
     font-size: 0.95rem;
-    color: var(--text-muted);
-    line-height: 1.7;
-    margin-bottom: 32px;
+    color: rgba(236, 239, 244, 0.75);
+    line-height: 1.75;
+    max-width: 580px;
+    margin: 0 auto 28px;
   }
 
-  .action-buttons {
+  /* 操作按钮组 */
+  .warp-controls {
     display: flex;
     justify-content: center;
-    gap: 16px;
+    gap: 14px;
     flex-wrap: wrap;
+    margin-bottom: 24px;
   }
 
-  .btn {
+  .warp-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 22px;
-    border-radius: 8px;
-    font-size: 0.9rem;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-size: 0.88rem;
     font-weight: 500;
-    transition: all 0.2s ease;
     text-decoration: none;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: inherit;
+    border: 1px solid transparent;
+  }
+
+  .warp-btn:hover {
+    transform: translateY(-2px);
   }
 
   .btn-primary {
-    background: var(--text-main);
-    color: var(--bg-color);
-    border: 1px solid var(--text-main);
+    background: #5E81AC;
+    color: #FFFFFF;
+    box-shadow: 0 4px 18px rgba(94, 129, 172, 0.4);
   }
 
   .btn-primary:hover {
-    opacity: 0.88;
-    transform: translateY(-1px);
+    background: #81A1C1;
+    box-shadow: 0 6px 24px rgba(136, 192, 208, 0.6);
+  }
+
+  .btn-random {
+    background: rgba(180, 142, 173, 0.15);
+    color: #D8DEE9;
+    border-color: rgba(180, 142, 173, 0.4);
+  }
+
+  .btn-random:hover {
+    background: rgba(180, 142, 173, 0.3);
+    color: #FFFFFF;
+    border-color: #B48EAD;
+    box-shadow: 0 4px 20px rgba(180, 142, 173, 0.3);
   }
 
   .btn-secondary {
-    background: transparent;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ECEFF4;
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
   .btn-secondary:hover {
-    background: rgba(0, 0, 0, 0.04);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .btn-shockwave {
+    background: rgba(235, 203, 139, 0.12);
+    color: #EBCB8B;
+    border-color: rgba(235, 203, 139, 0.35);
+  }
+
+  .btn-shockwave:hover {
+    background: rgba(235, 203, 139, 0.24);
+    color: #FFF;
+    border-color: #EBCB8B;
+    box-shadow: 0 4px 20px rgba(235, 203, 139, 0.35);
+  }
+
+  /* 键盘快捷指令提示 */
+  .hud-shortcuts {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 16px;
+  }
+
+  .hud-shortcuts kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #88C0D0;
+    font-size: 0.72rem;
+  }
+
+  /* 辅助视觉隐藏 */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  @media (max-width: 768px) {
+    .desktop-only {
+      display: none !important;
+    }
+    .hud-console {
+      margin-top: 100px;
+      padding: 0 12px;
+    }
+    .singularity-card {
+      padding: 26px 18px 22px;
+    }
+    .holo-title {
+      font-size: 1.35rem;
+    }
+    .warp-btn {
+      width: 100%;
+    }
   }
 </style>

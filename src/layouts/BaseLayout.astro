@@ -167,6 +167,23 @@ const ogImageURL = new URL(image.startsWith('http') ? image : image, Astro.site 
         });
       })();
     </script>
+
+    <!-- Pretext 全局文字排版引擎客户端脚本 -->
+    <script>
+      import { applyPretextTypography, cleanupPretextTypography } from '../lib/pretextTypography';
+
+      function initTypography() {
+        applyPretextTypography(document);
+      }
+
+      document.addEventListener('astro:before-swap', cleanupPretextTypography);
+      document.addEventListener('astro:page-load', initTypography);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTypography);
+      } else {
+        initTypography();
+      }
+    </script>
   </body>
 </html>
 
